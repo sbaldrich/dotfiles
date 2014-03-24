@@ -1,0 +1,4 @@
+startup_message off
+autodetach on
+defscrollback 30000
+termcapinfo xterm-256color|xterm-color|xterm|xterms|xs|rxvt ti@:te@
