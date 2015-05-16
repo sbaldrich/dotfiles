@@ -59,12 +59,12 @@ tcarena(){
 # git completion and prompt utility scripts
 . ~/.git-completion.bash
 . ~/.git-prompt.sh
-export GIT PS1 SHOWDIRTYSTATE=1
+export GIT_PS1_SHOWDIRTYSTATE=1
 
 
 ###   misc   ###
 
-export PS1='\[\e[0;32m\]\u@\h:\W $(__git_ps1 " (%s)") \$ \[\e[0m\]'
+export PS1='\[\e[0;32m\]\u@\h:\W\[\e[0;93m\]$(__git_ps1 " (%s)") \[\e[0;32m\]\$ \[\e[0m\]'
 
 # go up n directories using this function
 cust_cd(){
