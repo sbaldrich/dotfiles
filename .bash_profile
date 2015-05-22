@@ -4,7 +4,7 @@
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 #Java home is sometimes a pain in the ass on OS X
-#export JAVA_HOME=$(/usr/libexec/java_home)
+export JAVA_HOME=$(/usr/libexec/java_home)
 
 
 
@@ -30,10 +30,10 @@ mask(){
                 echo "No mask given"
                 return
         fi
-        if [ ! -f ~/bin/masks/$1.sh ]; then
+        if [ ! -f ~/sbaldrich/bin/masks/$1.sh ]; then
 			echo "Mask $1 does not exist"
 		else
-			. ~/bin/masks/$1.sh
+			. ~/sbaldrich/bin/masks/$1.sh
 		fi
 }
 
@@ -65,6 +65,7 @@ export GIT_PS1_SHOWDIRTYSTATE=1
 ###   misc   ###
 
 export PS1='\[\e[0;32m\]\u@\h:\W\[\e[0;93m\]$(__git_ps1 " (%s)") \[\e[0;32m\]\$ \[\e[0m\]'
+export FIGNORE=DS_Store
 
 # go up n directories using this function
 cust_cd(){
@@ -78,5 +79,5 @@ alias ..="cust_cd"
 shopt -s cdable_vars
 source ~/.routes #useful routes for quick moving. Remember tilde expansion does not work with cdable_vars
 
-#source ~/.profile
-#source ~/.bashrc
+source ~/.profile
+source ~/.bashrc
