@@ -60,5 +60,20 @@ brew cask install google-drive
 brew cask install dropbox
 brew cask install gimp
 brew cask install calibre
+brew cask install xquartz
+brew cask install wireshark
+
+brew cask install java
+brew install maven32
+brew install jenv
+
+brew cask install eclipse-installer
 
 brew cleanup
+
+# Atom
+apm install linter
+pip install flake8
+pip install flake8-docstrings
+apm install linter-flake8
+apm install script
