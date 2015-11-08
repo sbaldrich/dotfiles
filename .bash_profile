@@ -18,8 +18,12 @@ alias ~="cd ~"
 alias q="ll | wc -l"
 alias qq="find . | wc -l"
 
+alias gcc='gcc-4.9'
+alias cc='gcc-4.9'
+alias g++='g++-4.9'
+alias c++='c++-4.9'
 
-
+alias docker-up='bash --login /Applications/Docker/Docker\ Quickstart\ Terminal.app/Contents/Resources/Scripts/start.sh'
 
 ###   masks    ###
 # Masks are 'profiles' that define functions you can use on specific

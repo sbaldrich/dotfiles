@@ -1,4 +1,5 @@
-#!/bin/eash
+#!/bin/bash
+## Wait right there! This script is untested
 
 brew tap homebrew/python
 brew install python
