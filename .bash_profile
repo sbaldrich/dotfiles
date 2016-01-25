@@ -13,7 +13,7 @@ export JAVA_HOME=$(/usr/libexec/java_home)
 
 alias ls="ls -G"
 alias ll="ls -alhpTG"
-alias ...="cd ../.."
+alias ...=".. 2"
 alias ~="cd ~"
 alias q="ll | wc -l"
 alias qq="find . | wc -l"

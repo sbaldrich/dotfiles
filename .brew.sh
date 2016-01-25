@@ -61,8 +61,7 @@ brew cask install gimp
 brew cask install calibre
 brew cask install xquartz
 brew cask install wireshark
-brew cask install dockertoolbox
-
+brew cask install vagrant
 brew cleanup
 
 # Atom

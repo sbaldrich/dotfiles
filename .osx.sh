@@ -146,7 +146,7 @@ defaults write com.apple.dock show-process-indicators -bool true
 # Wipe all (default) app icons from the Dock
 # This is only really useful when setting up a new Mac, or if you don’t use
 # the Dock to launch apps.
-#defaults write com.apple.dock persistent-apps -array
+defaults write com.apple.dock persistent-apps -array
 
 # Don’t show Dashboard as a Space
 defaults write com.apple.dock dashboard-in-overlay -bool true
