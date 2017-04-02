@@ -13,6 +13,9 @@ nmap <silent> <leader>sv :so $MYVIMRC<CR>
 "Hide buffers instead of closing them
 set hidden
 
+" Show the current command
+set showcmd
+
 "Always show status line
 set laststatus=2
 
@@ -28,7 +31,7 @@ set autoread
 set ruler
 
 "Show line numbers
-set number
+set relativenumber
 set numberwidth=3
 
 "Tabs

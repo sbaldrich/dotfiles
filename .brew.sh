@@ -16,6 +16,7 @@ brew install openssl
 brew install wget
 brew install curl
 brew install ack
+brew install ctags
 brew install git
 brew install hub
 brew install node
@@ -45,10 +46,8 @@ brew cask install iterm2
 brew cask install vlc
 brew cask install utorrent
 brew cask install the-unarchiver
-brew cask install atom
 brew cask install virtualbox
 brew cask install openemu
-brew cask install spotify
 brew cask install wireshark
 brew cask install torbrowser
 brew cask install rstudio
@@ -58,15 +57,8 @@ brew cask install hipchat
 brew cask install google-drive
 brew cask install dropbox
 brew cask install gimp
-brew cask install calibre
 brew cask install xquartz
 brew cask install wireshark
 brew cask install vagrant
+brew cask install docker
 brew cleanup
-
-# Atom
-apm install linter
-pip install flake8
-pip install flake8-docstrings
-apm install linter-flake8
-apm install script
