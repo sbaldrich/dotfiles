@@ -11,6 +11,7 @@ xpath = {
     'tags': '//span[@class="tag-box"]/text()'
     }
 
+problemset_url='https://codeforces.com/problemset/problem'
 
 
 def fetch_tags(tree):
@@ -24,7 +25,7 @@ def fetch_title(tree):
     return title
 
 
-def prepare_files(tree):
+def prepare_files(tree, url):
     from textwrap import dedent
     title = fetch_title(tree)
     statement_filename = "{}.statement.txt".format(title)
@@ -35,11 +36,12 @@ def prepare_files(tree):
         ---
         title: {title}
         tags: {tags}
+        link: {url}
         ---
         
         """
         out.write(dedent(metadata))
-    Path(solution_filename).touch()
+#    Path(solution_filename).touch() This doesn't seem to be very useful.
 
 
 if __name__ == '__main__':
@@ -47,10 +49,11 @@ if __name__ == '__main__':
         print("Provide a CF problem URL!")
         exit(-1)
 
-    url = sys.argv[1]
+    prob = sys.argv[1].upper()
+    url = f'{problemset_url}/{prob[:-1]}/{prob[-1]}'
     page = requests.get(url)
     tree = html.fromstring(page.content)
 
-    prepare_files(tree)
+    prepare_files(tree, url)
 
 

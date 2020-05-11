@@ -1,12 +1,13 @@
 ###   competitive programming   ###
 
+# Load the competition environment
+alias compete='loadenv compete;cd ~/code/cp'
+
 # Prepare archive files for a Codeforces problem
 
 function cfprob(){
 	python3 ~/dotfiles/tools/prepare_cf_problem.py $1
 }
-
-###   competitive programming   ###
 
 # Problem checker (Currently only supports java)
 function checker(){
@@ -24,24 +25,61 @@ function checker(){
 	done
 }
 
+# Dump file to clipboard
+
+function clip(){
+	cat $1 | xclip -selection c
+}
+
 #Get the latest arena and open it
 topcoder(){
     curl http://community.topcoder.com/contest/arena/ContestAppletProd.jnlp >> ~/Desktop/arena.jnlp
     open ~/Desktop/arena.jnlp
 }
 
-#Create a contest README
+# Virtualenvs
 
-function init-contest(){
-	if [ ! -f ./contest.txt ]; then
-cat << EOF >> contest.txt
-CONTEST NAME
-============
-LINK: link-here
+function loadenv(){
+	ENVS_HOME=~/envs
+	
+	if [[ -z $1 ]]
+	then
+		echo "Supply an environment name"
+		return -1
+	fi
+	
+	TARGET_ENV="$ENVS_HOME/$1"
+	
+	if [[ -d $TARGET_ENV ]]
+	then
+		source $TARGET_ENV/bin/activate
+	else
+		echo "Environment $1 not found"
+		return -1
+	fi
+}
 
-Problemset:
-- problem a [dp, greedy, dfs, bfs]
-- problem b [ad-hoc, binary-search]
-EOF
+
+function createenv(){
+	ENVS_HOME=~/envs
+	
+	if [[ -z $1 ]]
+	then
+		echo "Supply an environment name"
+		return -1
+	fi
+	
+	TARGET_ENV="$ENVS_HOME/$1"
+	
+	if [[ -d $TARGET_ENV ]]
+	then
+		echo "Environment $1 already exists!"
+	else
+		pushd $ENVS_HOME
+		python3 -m venv $1
+		source $1/bin/activate
+		popd
+		echo "Created new environment $1"
+		return -1
 	fi
 }
