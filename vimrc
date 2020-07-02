@@ -6,6 +6,8 @@ let mapleader=","
 "Mappings for quickly editing/reloading the vimrc file
 nmap <silent> <leader>ev :e $MYVIMRC<CR>
 nmap <silent> <leader>sv :so $MYVIMRC<CR>
+nmap <silent> <leader>ei3 :e ~/.config/i3/config<CR>
+nmap <silent> <leader>ttj :0r ~/code/cp/templates/template.java<CR>/ContestIO<CR>zf%<CR>/::template-entr<CR>zzS
 
 "Hide buffers instead of closing them
 set hidden
@@ -43,9 +45,12 @@ set copyindent
 set showmatch
 
 "Show where the cursor is
-set cursorline
+"set cursorline
 set list
-set listchars=tab:>-,trail:.,nbsp:~
+"set listchars=tab:>-,trail:.,nbsp:~
+set showbreak=↪\ 
+set listchars=tab:»\ ,extends:›,precedes:‹,nbsp:·,trail:·
+
 
 "Do not create swap nor backup files
 set noswapfile
@@ -98,6 +103,9 @@ set splitright
 
 "Toogle paste mode with F2
 set pastetoggle=<F2>
+"Yank to clipboard with <C-y>
+map <C-y> :w !xclip -sel c <CR><CR>
+
 
 "F5 to show current buffers
 nnoremap <F5> :buffers<CR>:buffer<Space>
@@ -110,14 +118,18 @@ nnoremap <C-e> 2<C-e>
 nnoremap <C-y> 2<C-y>
 
 
-"Setup java lang
+"Lang specific stuff
 autocmd Filetype java set makeprg=javac\ %
+autocmd Filetype python set makeprg=python\ %
+
 set errorformat=%A%f:%l:\ %m,%-Z%p^,%-C%.%#
 map <F9> :make<Return>:copen<Return>
 map <F10> :cprevious<Return>
 map <F11> :cnext<Return>
 map <F12> :cclose<CR>
 set autowrite
+
+
 
 "Do what plugings do with just vim
 "  File finding
@@ -130,7 +142,7 @@ call plug#begin('~/.vim/plugged')
 
 Plug 'lervag/vimtex'
 Plug 'sirver/ultisnips'
-Plug 'honza/vim-snippets'
+"Plug 'honza/vim-snippets'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 
