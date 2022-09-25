@@ -1,5 +1,7 @@
 set nocompatible
 
+" GENERAL
+
 "Change the mapleader to , just because
 let mapleader=","
 
@@ -9,8 +11,20 @@ nmap <silent> <leader>sv :so $MYVIMRC<CR>
 nmap <silent> <leader>ei3 :e ~/.config/i3/config<CR>
 nmap <silent> <leader>ttj :0r ~/code/cp/templates/template.java<CR>/ContestIO<CR>zf%<CR>/::template-entr<CR>zzS
 
+"Spelling
+
+"setlocal spell
+"set spelllang=en_gb
+"inoremap <C-l> <c-g>u<Esc>[s1z=`]a<c-g>u
+
+" BUFFERS
 "Hide buffers instead of closing them
 set hidden
+
+nnoremap <leader>w :w<CR>
+
+nnoremap <C-n> :bnext<CR>
+nnoremap <C-p> :bprevious<CR>
 
 " Show the current command
 set showcmd
@@ -106,6 +120,9 @@ set pastetoggle=<F2>
 "Yank to clipboard with <C-y>
 map <C-y> :w !xclip -sel c <CR><CR>
 
+"Save using F3
+nnoremap <F3> :w<CR>
+inoremap <F3> <ESC>:w<CR>
 
 "F5 to show current buffers
 nnoremap <F5> :buffers<CR>:buffer<Space>
@@ -158,6 +175,17 @@ let g:tex_conceal='abdmg'
 let g:UltiSnipsExpandTrigger = '<tab>'
 let g:UltiSnipsJumpForwardTrigger = '<tab>'
 let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
+
+let g:vimtex_compiler_latexmk = {
+    \ 'options' : [
+    \   '-pdf',
+    \   '-shell-escape',
+    \   '-verbose',
+    \   '-file-line-error',
+    \   '-synctex=1',
+    \   '-interaction=nonstopmode',
+    \ ],
+    \}
 
 "Plugin configs
 "vim-airline
