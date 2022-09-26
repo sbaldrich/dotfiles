@@ -5,9 +5,37 @@ if [ -f ~/.local_aliases.sh ]; then
     . ~/.local_aliases.sh
 fi
 
-# Aliases
+# Main utility function for handling the dotfiles
+function dotfile {
+   /usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME $@
+}
 
-alias k=kubectl
+# Aliases [[
+
+  alias k=kubectl
+
+# ]]
+
+# Utilities[[
+
+  # Simple bookmarking [[
+  if [ -d "$HOME/.bookmarks" ]; then
+    export CDPATH="$CDPATH:$HOME/.bookmarks:/"
+    alias j="cd -P"
+
+    function bookmark(){
+      if [ $# -lt 2 ]
+        then
+          echo "Usage: $funcstack[1] <abs-path> <alias>"
+          return
+      fi
+      ln -s $1 $HOME/.bookmarks/"@$2"
+    }
+
+    alias b=bookmark
+  fi
+  # ]]
+# ]]
 
 # Linux specific config [[
 if [ $(uname) = "Linux" ]; then
@@ -33,3 +61,4 @@ if [ $(uname) = "Linux" ]; then
   # Be a happier vim user (disable using setxkbmap -option)
   alias capsw='setxkbmap -option caps:swapescape'
 fi
+# ]]

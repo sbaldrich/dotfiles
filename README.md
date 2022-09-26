@@ -27,3 +27,7 @@ dotfile config --local status.showUntrackedFiles no
 ## Adding config files
 
 Using the `dotfile` command that is defined somewhere in these dotfiles, you can now modify your configuration and keep track of it using git without having to deal with remembering to symlink.
+
+## Notes
+
+* The vim configuration assumes you've installed `vim-plug`. To do so you can follow [these instructions](https://github.com/junegunn/vim-plug#vim)
