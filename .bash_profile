@@ -62,3 +62,11 @@ if [ $(uname) = "Linux" ]; then
   alias capsw='setxkbmap -option caps:swapescape'
 fi
 # ]]
+
+# OSX specific config [[
+if [ $(uname) = "Darwin" ]; then
+	function tomate(){
+		((sleep $((15 * 60)); osascript -e 'display notification "Take a break or set up a new tomate" with title "Tomate 🍅" subtitle "Your tomate is done" sound name "Purr"') > /dev/null 2>&1 &)
+	}
+fi
+# ]]
