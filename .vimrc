@@ -8,8 +8,11 @@ let mapleader=","
 "Mappings for quickly editing/reloading the vimrc file
 nmap <silent> <leader>ev :e $MYVIMRC<CR>
 nmap <silent> <leader>sv :so $MYVIMRC<CR>
-nmap <silent> <leader>ei3 :e ~/.config/i3/config<CR>
-nmap <silent> <leader>ttj :0r ~/code/cp/templates/template.java<CR>/ContestIO<CR>zf%<CR>/::template-entr<CR>zzS
+
+"Code templates
+nmap <silent> <leader>tj :-1r ~/code/comprog/templates/template.java<CR>?FastScanner<CR>zf%<CR>/::template-entr<CR>zzS
+
+nmap <leader>q :q<CR>
 
 "Spelling
 
@@ -49,7 +52,7 @@ set numberwidth=6
 
 "Tabs
 set smarttab
-set tabstop=4
+set tabstop=2
 set shiftwidth=4
 set shiftround
 set autoindent
@@ -60,10 +63,10 @@ set showmatch
 
 "Show where the cursor is
 "set cursorline
-set list
+"set list
 "set listchars=tab:>-,trail:.,nbsp:~
 set showbreak=↪\ 
-set listchars=tab:»\ ,extends:›,precedes:‹,nbsp:·,trail:·
+"set listchars=tab:»\ ,extends:›,precedes:‹,nbsp:·,trail:·
 
 
 "Do not create swap nor backup files
@@ -81,8 +84,10 @@ set smartcase
 set hlsearch
 
 "Formatting
-vmap Q gq "Format selection
-nmap Q gqap "Format paragraph
+vmap Q gq 
+"Format selection
+nmap Q gqap 
+"Format paragraph
 
 "Kill arrows to use Vim like you're supposed to
 map <up> <nop>
@@ -106,10 +111,10 @@ autocmd filetype python set expandtab
 noremap <leader>l :nohl<CR>
 
 "More natural split navigation
-nnoremap <C-J> <C-W><C-J>
-nnoremap <C-K> <C-W><C-K>
-nnoremap <C-L> <C-W><C-L>
-nnoremap <C-H> <C-W><C-H>
+nnoremap <C-J> <C-W>j
+nnoremap <C-K> <C-W>k
+nnoremap <C-L> <C-W>l
+nnoremap <C-H> <C-W>h
 
 "Split opening that actually makes sense
 set splitbelow
@@ -122,7 +127,7 @@ map <C-y> :w !xclip -sel c <CR><CR>
 
 "Save using F3
 nnoremap <F3> :w<CR>
-inoremap <F3> <ESC>:w<CR>
+inoremap <F3> <ESC>gg=G:w<CR>
 
 "F5 to show current buffers
 nnoremap <F5> :buffers<CR>:buffer<Space>
@@ -137,6 +142,7 @@ nnoremap <C-y> 2<C-y>
 
 "Lang specific stuff
 autocmd Filetype java set makeprg=javac\ %
+autocmd Filetype java nnoremap <leader>r :!java %<Return>
 autocmd Filetype python set makeprg=python\ %
 
 set errorformat=%A%f:%l:\ %m,%-Z%p^,%-C%.%#
@@ -145,7 +151,6 @@ map <F10> :cprevious<Return>
 map <F11> :cnext<Return>
 map <F12> :cclose<CR>
 set autowrite
-
 
 
 "Do what plugings do with just vim
@@ -157,35 +162,21 @@ inoremap {<CR> {<CR>}<ESC>O
 "Setup some minimal plugins
 call plug#begin('~/.vim/plugged')
 
-Plug 'lervag/vimtex'
 Plug 'sirver/ultisnips'
-"Plug 'honza/vim-snippets'
+Plug 'preservim/nerdtree'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
-
+Plug 'google/vim-maktaba'
+Plug 'google/vim-codefmt'
+" Also add Glaive, which is used to configure codefmt's maktaba flags. See
+" `:help :Glaive` for usage.
+Plug 'google/vim-glaive'
 call plug#end()
 
-"vim-tex config
-let g:tex_flavor='latex'
-let g:vimtex_view_method='zathura'
-let g:vimtex_quickfix_mode=0
-set conceallevel=1
-let g:tex_conceal='abdmg'
 
 let g:UltiSnipsExpandTrigger = '<tab>'
 let g:UltiSnipsJumpForwardTrigger = '<tab>'
 let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
-
-let g:vimtex_compiler_latexmk = {
-    \ 'options' : [
-    \   '-pdf',
-    \   '-shell-escape',
-    \   '-verbose',
-    \   '-file-line-error',
-    \   '-synctex=1',
-    \   '-interaction=nonstopmode',
-    \ ],
-    \}
 
 "Plugin configs
 "vim-airline
@@ -193,8 +184,16 @@ let g:airline#extensions#tabline#enabled = 1
 
 nmap <silent> <leader>ued :UltiSnipsEdit<CR>
 
-"NETRW CONFIG
-let g:netrw_liststyle = 3
-let g:netrw_banner = 0
-let g:netrw_browse_split = 2
-let g:netrw_winsize = 25
+"NETRW
+" I tried NETRW, time for NERDTree
+nnoremap <leader>n :NERDTreeFocus<CR>
+"nnoremap <C-n> :NERDTree<CR>
+nnoremap <C-t> :NERDTreeToggle<CR>
+nnoremap <C-f> :NERDTreeFind<CR>
+
+" Start NERDTree when Vim is started without file arguments.
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | NERDTree | endif
+
+" Exit Vim if NERDTree is the only window remaining in the only tab.
+autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif

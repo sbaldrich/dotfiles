@@ -5,7 +5,7 @@ disabled = true
 disabled = true
 
 [kubernetes]
-disabled = false
+disabled = true
 [kubernetes.context_aliases]
 # Contexts from GKE, AWS and other cloud providers usually carry additional information, like the region/zone.
 # The following entry matches on the GKE format (`gke_projectname_zone_cluster-name`)
@@ -13,6 +13,7 @@ disabled = false
 "gke_.*_(?P<var_cluster>[\\w-]+)" = "gke-$var_cluster"
 
 [gcloud]
+disabled = true
 format = 'on [$symbol($project)]($style) '
 
 [java]

@@ -40,11 +40,6 @@ function dotfile {
 # Linux specific config [[
 if [ $(uname) = "Linux" ]; then
   
-  # Set up a pomodoro helper
-  function tomate(){
-		 ({sleep $((15 * 60)); notify-send "Tomate 🍅" "Your tomate is ready. Take a break or set up a new tomate"} > /dev/null &)
-	}
-
   # enable color support
   if [ -x /usr/bin/dircolors ]; then
       test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
@@ -70,9 +65,8 @@ fi
 
 # OSX specific config [[
 if [ $(uname) = "Darwin" ]; then
-	# Set up a pomodoro helper
-  function tomate(){
-		((sleep $((15 * 60)); osascript -e 'display notification "Take a break or set up a new tomate" with title "Tomate 🍅" subtitle "Your tomate is done" sound name "Purr"') > /dev/null 2>&1 &)
-	}
+	
 fi
 # ]]
+
+export PATH=$HOME/bin:$PATH
