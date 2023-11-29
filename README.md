@@ -1,32 +1,25 @@
 # Dotfiles
 
+I used to have a dedicated `dotfile` command to deal with dotfiles. However, I find `stow` to be a better option for me. 
+See how it works [here](https://blog.sbaldrich.dev/blog/2021-02-07-easy-dotfiles-with-stow).
+
 ## Setup
 
-The following commands should be enough to get you started on a new machine. This will setup a new bare repo at `$HOME/.cfg` and setup
-the `dotfile` alias for git such that you can use it to manage configuration files.
+Either use `stow` directly with a package:
 
-For more information about this setup, check out this [blog post](https://www.atlassian.com/git/tutorials/dotfiles) by @durdn.
-
-```sh
-git clone --bare git@github.com:sbaldrich/dotfiles.git $HOME/.cfg
-function dotfile {
-   /usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME $@
-}
-mkdir -p .config-backup
-dotfile checkout
-if [ $? = 0 ]; then
-  echo "Checked out config.";
-  else
-    echo "Backing up pre-existing dot files.";
-    dotfile checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | xargs -I{} mv {} .config-backup/{}
-fi;
-dotfile checkout
-dotfile config --local status.showUntrackedFiles no
+```shell
+stow --verbose --target=$$HOME -n --restow zsh
 ```
 
-## Adding config files
+Or just use make to set everything up:
 
-Using the `dotfile` command that is defined somewhere in these dotfiles, you can now modify your configuration and keep track of it using git without having to deal with remembering to symlink.
+```shell
+make restow
+```
+
+## Uninstalling
+
+Use the `make delete` command.
 
 ## Notes
 
