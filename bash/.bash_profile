@@ -5,11 +5,6 @@ if [ -f ~/.local_aliases.sh ]; then
     . ~/.local_aliases.sh
 fi
 
-# Main utility function for handling the dotfiles
-function dotfile {
-   /usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME $@
-}
-
 # Aliases [[
 
   alias k=kubectl
