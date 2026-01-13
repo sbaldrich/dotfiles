@@ -8,11 +8,13 @@ let mapleader=","
 "Mappings for quickly editing/reloading the vimrc file
 nmap <silent> <leader>ev :e $MYVIMRC<CR>
 nmap <silent> <leader>sv :so $MYVIMRC<CR>
+nmap <silent> <leader>cls :!clear<CR>
 
 "Code templates
-nmap <silent> <leader>tj :-1r ~/code/comprog/templates/template.java<CR>?FastScanner<CR>zf%<CR>/::template-entr<CR>zzS
+nmap <silent> <leader>tj :-1r $HOME/ws/code/sbaldrich/comprog/templates/template.java<CR>?FastScanner<CR>zf%<CR>/::template-entr<CR>zzS
 
 nmap <leader>q :q<CR>
+nmap <leader>Q :q!
 
 "Spelling
 
@@ -53,7 +55,7 @@ set numberwidth=6
 "Tabs
 set smarttab
 set tabstop=2
-set shiftwidth=4
+set shiftwidth=2
 set shiftround
 set autoindent
 set copyindent
@@ -123,11 +125,12 @@ set splitright
 "Toogle paste mode with F2
 set pastetoggle=<F2>
 "Yank to clipboard with <C-y>
-map <C-y> :w !xclip -sel c <CR><CR>
+"map <C-y> :w !xclip -sel c <CR><CR>
+map <leader>Y ggVG"+y<CR>
 
 "Save using F3
 nnoremap <F3> :w<CR>
-inoremap <F3> <ESC>gg=G:w<CR>
+inoremap <F3> <E>=G:w<CR>
 
 "F5 to show current buffers
 nnoremap <F5> :buffers<CR>:buffer<Space>
@@ -143,6 +146,9 @@ nnoremap <C-y> 2<C-y>
 "Lang specific stuff
 autocmd Filetype java set makeprg=javac\ %
 autocmd Filetype java nnoremap <leader>r :!java %<Return>
+autocmd Filetype java nnoremap <leader>t :! ~/ws/bin/run-unit-tests.sh %<Return>
+autocmd Filetype java nnoremap <leader>f :! prettier --write % --plugin=prettier-plugin-java<Return>
+autocmd Filetype python nnoremap <leader>r :!clear; python %<Return>
 autocmd Filetype python set makeprg=python\ %
 
 set errorformat=%A%f:%l:\ %m,%-Z%p^,%-C%.%#
@@ -166,11 +172,11 @@ Plug 'sirver/ultisnips'
 Plug 'preservim/nerdtree'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
-Plug 'google/vim-maktaba'
-Plug 'google/vim-codefmt'
-" Also add Glaive, which is used to configure codefmt's maktaba flags. See
-" `:help :Glaive` for usage.
-Plug 'google/vim-glaive'
+" Autoformat
+"Plug 'vim-autoformat/vim-autoformat'
+
+"nnoremap <leader>f :Autoformat<CR>
+
 call plug#end()
 
 
@@ -186,14 +192,15 @@ nmap <silent> <leader>ued :UltiSnipsEdit<CR>
 
 "NETRW
 " I tried NETRW, time for NERDTree
-nnoremap <leader>n :NERDTreeFocus<CR>
-"nnoremap <C-n> :NERDTree<CR>
-nnoremap <C-t> :NERDTreeToggle<CR>
-nnoremap <C-f> :NERDTreeFind<CR>
-
-" Start NERDTree when Vim is started without file arguments.
-autocmd StdinReadPre * let s:std_in=1
-autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | NERDTree | endif
+"nnoremap <leader>n :NERDTreeFocus<CR>
+""nnoremap <C-n> :NERDTree<CR>
+"nnoremap <C-t> :NERDTreeToggle<CR>
+"nnoremap <C-f> :NERDTreeFind<CR>
+"
+"" Start NERDTree when Vim is started without file arguments.
+"autocmd StdinReadPre * let s:std_in=1
+"autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | NERDTree | endif
 
 " Exit Vim if NERDTree is the only window remaining in the only tab.
 autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
+

@@ -65,3 +65,18 @@ fi
 # ]]
 
 export PATH=$HOME/bin:$PATH
+
+complete -C /opt/homebrew/bin/terraform terraform
+alias jax='java $1'
+
+
+. "$HOME/.cargo/env"
+
+# Leetcode related setup
+eval "$(leetcode completions)"
+alias leet='mux start leetcode'
+
+
+# Add JBang to environment
+alias j!=jbang
+export PATH="$HOME/.jbang/bin:$PATH"
