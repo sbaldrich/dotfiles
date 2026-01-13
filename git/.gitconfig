@@ -1,6 +1,0 @@
-[core]
-	excludesFile = ~/.gitignore_global
-[pack]
-	window = 1
-[http]
-	postBuffer = 52428800
