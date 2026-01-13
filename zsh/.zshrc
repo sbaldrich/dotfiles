@@ -31,7 +31,7 @@ autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /opt/homebrew/bin/terraform terraform
 
 # pnpm
-export PNPM_HOME="/Users/santiago/Library/pnpm"
+export PNPM_HOME="$HOME/Library/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
@@ -43,12 +43,12 @@ esac
 eval "$(leetcode completions)"
 alias leet='tmuxinator start leetcode $1'
 
-alias jat='/Users/santiago/ws/bin/run-unit-tests.sh'
+alias jat='$HOME/ws/bin/run-unit-tests.sh'
 alias jax='java $1'
 
 
 # Created by `pipx` on 2025-09-24 21:36:08
-export PATH="$PATH:/Users/santiago/.local/bin"
+export PATH="$PATH:$HOME/.local/bin"
 
 # Unset the jo override that autojump created
 unset -f jo

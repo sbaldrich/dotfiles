@@ -1,4 +1,4 @@
-# /Users/santiago/.config/tmuxinator/leetcode.yml
+# $HOME/.config/tmuxinator/leetcode.yml
 
 name: leetcode
 root: ~/ws/code/sbaldrich/arena
@@ -52,5 +52,5 @@ windows:
       # synchronize: after
       panes:
         - leetcode edit <%= @args[0] %>
-        - leetcode pick <%= @args[0] %> && nodemon --exec java ~/.leetcode/code/<%= @args[0] %>*.java --watch /Users/santiago/.leetcode/code --ext .java -q
-        - nodemon --exec leetcode test <%= @args[0] %> --watch /Users/santiago/.leetcode/code --ext .java -q
+        - leetcode pick <%= @args[0] %> && nodemon --exec java ~/.leetcode/code/<%= @args[0] %>*.java --watch $HOME/.leetcode/code --ext .java -q
+        - nodemon --exec leetcode test <%= @args[0] %> --watch $HOME/.leetcode/code --ext .java -q
