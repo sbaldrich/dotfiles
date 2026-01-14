@@ -13,8 +13,15 @@ This is a personal dotfiles repository managed with GNU Stow. Each top-level dir
 # Install all packages (creates symlinks to $HOME)
 make restow
 
-# Install a specific package
-stow --verbose --target=$HOME --restow zsh
+# Install specific package(s)
+make restow PKG=zsh
+make restow PKG="bash zsh vim"
+
+# Install to a different target directory
+make restow TARGET=/tmp/test
+
+# Combine package and target
+make restow PKG=bash TARGET=/tmp/test
 ```
 
 ### Uninstalling
@@ -22,8 +29,15 @@ stow --verbose --target=$HOME --restow zsh
 # Remove all symlinks
 make delete
 
-# Remove a specific package
-stow --verbose --target=$HOME --delete zsh
+# Remove specific package(s)
+make delete PKG=zsh
+make delete PKG="bash zsh"
+
+# Remove from different target
+make delete TARGET=/tmp/test
+
+# Combine package and target
+make delete PKG=bash TARGET=/tmp/test
 ```
 
 ## Architecture
