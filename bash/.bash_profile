@@ -21,10 +21,10 @@ fi
     function bookmark(){
       if [ $# -lt 2 ]
         then
-          echo "Usage: $funcstack[1] <abs-path> <alias>"
+          echo "Usage: bookmark <abs-path> <alias>"
           return
       fi
-      ln -s $1 $HOME/.bookmarks/"@$2"
+      ln -s "$1" "$HOME/.bookmarks/@$2"
     }
 
     alias b=bookmark
@@ -45,7 +45,6 @@ if [ $(uname) = "Linux" ]; then
   # Add an "alert" alias for long running commands.  Use like so: sleep 10; alert
   alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
-  alias ls='ls --color'
   alias ll='ls -l --color'
   alias la='ls -al --color'
   

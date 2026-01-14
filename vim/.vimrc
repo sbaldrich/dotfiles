@@ -11,7 +11,13 @@ nmap <silent> <leader>sv :so $MYVIMRC<CR>
 nmap <silent> <leader>cls :!clear<CR>
 
 "Code templates
-nmap <silent> <leader>tj :-1r $HOME/ws/code/sbaldrich/comprog/templates/template.java<CR>?FastScanner<CR>zf%<CR>/::template-entr<CR>zzS
+" To override the template directory, set g:template_dir in your vimrc before this line:
+"   let g:template_dir = '/path/to/your/templates'
+if !exists('g:template_dir')
+  let g:template_dir = '$HOME/ws/code/sbaldrich/comprog/templates'
+endif
+execute 'nmap <silent> <leader>tj :-1r ' . g:template_dir . '/template.java<CR>'
+      \ . '?FastScanner<CR>zf%<CR>/::template-entr<CR>zzS'
 
 nmap <leader>q :q<CR>
 nmap <leader>Q :q!
