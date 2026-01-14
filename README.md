@@ -17,6 +17,18 @@ Or just use make to set everything up:
 make restow
 ```
 
+### Local Customization
+
+To add personal aliases and configurations that shouldn't be version controlled:
+
+```shell
+cd local
+cp .local_aliases.sh.example .local_aliases.sh
+# Edit .local_aliases.sh with your personal settings
+```
+
+Both bash and zsh configurations will automatically source this file if it exists.
+
 ## Uninstalling
 
 Use the `make delete` command.

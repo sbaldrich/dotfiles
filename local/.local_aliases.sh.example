@@ -1,0 +1,10 @@
+# Use this file to declare things you don't want to be tracked by version control.
+#
+# To use this file:
+# 1. Copy it to .local_aliases.sh: cp .local_aliases.sh.example .local_aliases.sh
+# 2. Add your personal aliases, exports, and configurations
+#
+# Examples:
+# alias myproject='cd ~/path/to/my/project'
+# export MY_SECRET_KEY='...'
+# alias vpn='sudo openvpn --config ~/.vpn/my-config.ovpn'

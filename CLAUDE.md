@@ -57,8 +57,8 @@ The zsh configuration is deliberately split into two files:
 This split prevents oh-my-zsh from taking over the entire `.zshrc` file.
 
 ### Local Customization
-- `local/.local_aliases.sh` - User-specific aliases and configurations that should not be version controlled
-- `local/.shared_aliases.sh` - Common aliases and configurations shared between bash and zsh
+- `local/.local_aliases.sh` - User-specific aliases and configurations that should not be version controlled (git-ignored). Users should copy from `.local_aliases.sh.example` template
+- `local/.shared_aliases.sh` - Common aliases and configurations shared between bash and zsh (version controlled)
 - Both bash and zsh configurations source these files if they exist
 
 ### Shared Configuration Pattern

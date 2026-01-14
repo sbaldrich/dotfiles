@@ -1,4 +1,6 @@
+# Best effort ignoring of user configuration
 .local_aliases.sh
+local/.local_aliases.sh
 
 .DS_Store
 .cfg
