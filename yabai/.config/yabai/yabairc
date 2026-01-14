@@ -15,7 +15,7 @@
 yabai -m config                                 \
     external_bar                 off:40:0       \
     menubar_opacity              1.0            \
-    mouse_follows_focus          off            \
+    mouse_follows_focus          on             \
     focus_follows_mouse          off            \
     display_arrangement_order    default        \
     window_origin_display        default        \
@@ -42,8 +42,7 @@ yabai -m config                                 \
     mouse_modifier               fn             \
     mouse_action1                resize         \
     mouse_action2                move           \
-    mouse_drop_action            swap						\
-    mouse_follows_focus					 on
+    mouse_drop_action            swap						
 
 yabai -m rule --add app="System Preferences" sticky=on manage=off
 yabai -m rule --add app="System Information" sticky=on manage=off

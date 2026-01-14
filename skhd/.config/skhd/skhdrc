@@ -143,6 +143,9 @@ alt + ctrl + cmd - left  : yabai -m window --display prev; yabai -m display --fo
 # alt - d : yabai -m window --toggle zoom-parent
 alt - f : yabai -m window --toggle zoom-fullscreen
 
+# toggle mouse_follows_focus
+cmd + ctrl + alt - m : yabai -m config mouse_follows_focus $(yabai -m config mouse_follows_focus | grep -q off && echo on || echo off)
+
 # toggle window split type
 # alt - e : yabai -m window --toggle split
 
