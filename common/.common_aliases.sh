@@ -1,8 +1,8 @@
-# Shared aliases and configurations for bash and zsh
+# Common aliases and configurations for bash and zsh
 # This file is sourced by both .bash_profile and .zshrc
 
-# Java execution alias
-alias jax='java $1'
+# Java execution
+jax() { java "$@"; }
 
 # JBang setup
 if command -v jbang &> /dev/null; then
@@ -14,3 +14,6 @@ fi
 if command -v leetcode &> /dev/null; then
     eval "$(leetcode completions)"
 fi
+
+# Kubernetes
+alias k=kubectl

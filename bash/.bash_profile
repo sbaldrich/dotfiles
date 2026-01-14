@@ -6,37 +6,10 @@ if [ -f ~/.local_aliases.sh ]; then
 fi
 
 # Load shared aliases and configurations
-[ -s "$HOME/.shared_aliases.sh" ] && . "$HOME/.shared_aliases.sh"
-
-# Aliases [[
-
-  alias k=kubectl
-
-# ]]
-
-# Utilities[[
-
-  # Simple bookmarking [[
-  if [ -d "$HOME/.bookmarks" ]; then
-    export CDPATH="$CDPATH:$HOME/.bookmarks:/"
-    alias j="cd -P"
-
-    function bookmark(){
-      if [ $# -lt 2 ]
-        then
-          echo "Usage: bookmark <abs-path> <alias>"
-          return
-      fi
-      ln -s "$1" "$HOME/.bookmarks/@$2"
-    }
-
-    alias b=bookmark
-  fi
-  # ]]
-# ]]
+[ -s "$HOME/.common_aliases.sh" ] && . "$HOME/.common_aliases.sh"
 
 # Linux specific config [[
-if [ $(uname) = "Linux" ]; then
+if [ "$(uname)" = "Linux" ]; then
   
   # enable color support
   if [ -x /usr/bin/dircolors ]; then
@@ -61,8 +34,8 @@ fi
 # ]]
 
 # OSX specific config [[
-if [ $(uname) = "Darwin" ]; then
-	
+if [ "$(uname)" = "Darwin" ]; then
+
 fi
 # ]]
 

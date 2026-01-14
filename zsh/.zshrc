@@ -7,7 +7,10 @@ fi
 [[ -s "$HOME/.oh-my-zsh.sh" ]] && source "$HOME/.oh-my-zsh.sh"
 
 # Load shared aliases and configurations
-[[ -s "$HOME/.shared_aliases.sh" ]] && source "$HOME/.shared_aliases.sh"
+[[ -s "$HOME/.common_aliases.sh" ]] && source "$HOME/.common_aliases.sh"
+
+# Load local aliases (user-specific, not version controlled)
+[[ -s "$HOME/.local_aliases.sh" ]] && source "$HOME/.local_aliases.sh"
 
 ## pyenv
 export PYENV_ROOT="$HOME/.pyenv"
