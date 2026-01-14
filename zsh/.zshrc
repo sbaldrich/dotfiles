@@ -1,18 +1,18 @@
 # Load brew autocompletions
-FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+if command -v brew &> /dev/null; then
+  FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+fi
 
 # I don't like omz to take over my .zshrc file, so I keep that config separate.
 [[ -s "$HOME/.oh-my-zsh.sh" ]] && source "$HOME/.oh-my-zsh.sh"
 
-## sdkman
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-export SDKMAN_DIR="$HOME/.sdkman"
-[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+# Load shared aliases and configurations
+[[ -s "$HOME/.shared_aliases.sh" ]] && source "$HOME/.shared_aliases.sh"
 
 ## pyenv
 export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
+command -v pyenv &> /dev/null && eval "$(pyenv init -)"
 
 ## nvm
 export NVM_DIR="$HOME/.nvm"
@@ -20,15 +20,18 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 ## google-cloud-sdk
-source "$(brew --prefix)/share/google-cloud-sdk/path.zsh.inc"
-source "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc"
+if command -v brew &> /dev/null; then
+  local gcloud_path="$(brew --prefix)/share/google-cloud-sdk"
+  [ -f "$gcloud_path/path.zsh.inc" ] && source "$gcloud_path/path.zsh.inc"
+  [ -f "$gcloud_path/completion.zsh.inc" ] && source "$gcloud_path/completion.zsh.inc"
+fi
 autoload -Uz compinit
 zstyle ':completion:*' menu select
 fpath+=~/.zfunc
 
 
 autoload -U +X bashcompinit && bashcompinit
-complete -o nospace -C /opt/homebrew/bin/terraform terraform
+command -v terraform &> /dev/null && complete -o nospace -C "$(command -v terraform)" terraform
 
 # pnpm
 export PNPM_HOME="$HOME/Library/pnpm"
@@ -40,11 +43,9 @@ esac
 
 
 # Leetcode related setup
-eval "$(leetcode completions)"
 alias leet='tmuxinator start leetcode $1'
 
 alias jat='$HOME/ws/bin/run-unit-tests.sh'
-alias jax='java $1'
 
 
 # Created by `pipx` on 2025-09-24 21:36:08
@@ -53,6 +54,7 @@ export PATH="$PATH:$HOME/.local/bin"
 # Unset the jo override that autojump created
 unset -f jo
 
-# Add JBang to environment
-alias j!=jbang
-export PATH="$HOME/.jbang/bin:$PATH"
+## sdkman
+#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+export SDKMAN_DIR="$HOME/.sdkman"
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"

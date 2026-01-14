@@ -5,6 +5,9 @@ if [ -f ~/.local_aliases.sh ]; then
     . ~/.local_aliases.sh
 fi
 
+# Load shared aliases and configurations
+[ -s "$HOME/.shared_aliases.sh" ] && . "$HOME/.shared_aliases.sh"
+
 # Aliases [[
 
   alias k=kubectl
@@ -65,17 +68,9 @@ fi
 
 export PATH=$HOME/bin:$PATH
 
-complete -C /opt/homebrew/bin/terraform terraform
-alias jax='java $1'
+command -v terraform &> /dev/null && complete -C "$(command -v terraform)" terraform
 
-
-. "$HOME/.cargo/env"
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 
 # Leetcode related setup
-eval "$(leetcode completions)"
 alias leet='mux start leetcode'
-
-
-# Add JBang to environment
-alias j!=jbang
-export PATH="$HOME/.jbang/bin:$PATH"

@@ -44,7 +44,17 @@ This split prevents oh-my-zsh from taking over the entire `.zshrc` file.
 
 ### Local Customization
 - `local/.local_aliases.sh` - User-specific aliases and configurations that should not be version controlled
-- Both bash and zsh configurations source this file if it exists
+- `local/.shared_aliases.sh` - Common aliases and configurations shared between bash and zsh
+- Both bash and zsh configurations source these files if they exist
+
+### Shared Configuration Pattern
+
+Common aliases and configurations used by both bash and zsh are consolidated in `local/.shared_aliases.sh`:
+- Java execution alias (`jax`)
+- JBang setup and alias (`j!`)
+- Leetcode completions
+
+Shell-specific configurations (like the `leet` alias which differs between shells) remain in their respective `.zshrc` or `.bash_profile` files. All external commands are guarded with existence checks to prevent errors when tools aren't installed.
 
 ### Version Managers & Tools Configured
 The dotfiles configure integration for:
