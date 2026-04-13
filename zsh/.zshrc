@@ -8,6 +8,7 @@ fi
 
 # Load shared aliases and configurations
 [[ -s "$HOME/.common_aliases.sh" ]] && source "$HOME/.common_aliases.sh"
+[[ -s "$HOME/.functions.sh" ]] && source "$HOME/.functions.sh"
 
 # Load local aliases (user-specific, not version controlled)
 [[ -s "$HOME/.local_aliases.sh" ]] && source "$HOME/.local_aliases.sh"

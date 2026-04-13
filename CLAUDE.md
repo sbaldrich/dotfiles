@@ -8,6 +8,17 @@ This is a personal dotfiles repository managed with GNU Stow. Each top-level dir
 
 ## Common Commands
 
+### Fresh Machine Bootstrap
+```bash
+# Install Homebrew, brew packages, oh-my-zsh, sdkman, jbang, rust, vim-plug, tmuxinator
+./install.sh
+
+# Preview what would be installed without making changes
+./install.sh --dry-run
+```
+
+After running `install.sh`, run `make restow` to symlink the dotfiles, then `:PlugInstall` in vim.
+
 ### Installing/Updating dotfiles
 ```bash
 # Install all packages (creates symlinks to $HOME)
@@ -58,8 +69,9 @@ This split prevents oh-my-zsh from taking over the entire `.zshrc` file.
 
 ### Local Customization
 - `local/.local_aliases.sh` - User-specific aliases and configurations that should not be version controlled (git-ignored). Users should copy from `.local_aliases.sh.example` template
-- `common/.common_aliases.sh` - Common aliases and configurations shared between bash and zsh (version controlled)
-- Both bash and zsh configurations source these files if they exist
+- `common/.common_aliases.sh` - Short, one-liner aliases shared between bash and zsh (version controlled)
+- `common/.functions.sh` - Multi-line workflow helper functions shared between bash and zsh (version controlled)
+- Both bash and zsh configurations source all three files if they exist
 
 ### Common Configuration Pattern
 

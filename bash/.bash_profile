@@ -7,6 +7,7 @@ fi
 
 # Load shared aliases and configurations
 [ -s "$HOME/.common_aliases.sh" ] && . "$HOME/.common_aliases.sh"
+[ -s "$HOME/.functions.sh" ] && . "$HOME/.functions.sh"
 
 # Linux specific config [[
 if [ "$(uname)" = "Linux" ]; then
