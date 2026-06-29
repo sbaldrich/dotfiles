@@ -15,5 +15,8 @@ if command -v leetcode &> /dev/null; then
     eval "$(leetcode completions)"
 fi
 
+# Local bin
+[[ -d "${HOME}/local/bin" ]] && export PATH="${HOME}/local/bin:${PATH}"
+
 # Kubernetes
 alias k=kubectl

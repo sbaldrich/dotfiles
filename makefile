@@ -3,7 +3,9 @@ PKG ?= */
 TARGET ?= $$HOME
 
 restow:
-	stow --verbose --target=$(TARGET) --restow $(PKG)
+	stow --verbose --no-folding --target=$(TARGET) --restow $(PKG)
+	@[ -x local/local/bin/add-bindkey.sh ] && zsh local/local/bin/add-bindkey.sh || true
 
 delete:
-	stow --verbose --target=$(TARGET) --delete $(PKG)
+	@[ -x local/local/bin/remove-bindkey.sh ] && zsh local/local/bin/remove-bindkey.sh || true
+	stow --verbose --no-folding --target=$(TARGET) --delete $(PKG)
