@@ -10,9 +10,6 @@ fi
 [[ -s "$HOME/.common_aliases.sh" ]] && source "$HOME/.common_aliases.sh"
 [[ -s "$HOME/.functions.sh" ]] && source "$HOME/.functions.sh"
 
-# Load local aliases (user-specific, not version controlled)
-[[ -s "$HOME/.local_aliases.sh" ]] && source "$HOME/.local_aliases.sh"
-
 ## pyenv
 export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
@@ -29,9 +26,7 @@ if command -v brew &> /dev/null; then
   [ -f "$gcloud_path/path.zsh.inc" ] && source "$gcloud_path/path.zsh.inc"
   [ -f "$gcloud_path/completion.zsh.inc" ] && source "$gcloud_path/completion.zsh.inc"
 fi
-autoload -Uz compinit
 zstyle ':completion:*' menu select
-fpath+=~/.zfunc
 
 
 autoload -U +X bashcompinit && bashcompinit
@@ -62,3 +57,9 @@ unset -f jo
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 export SDKMAN_DIR="$HOME/.sdkman"
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+# Load local aliases (user-specific, not version controlled)
+[[ -s "$HOME/.local_aliases.sh" ]] && source "$HOME/.local_aliases.sh"
+
+
+fpath+=~/.zfunc; autoload -Uz compinit; compinit
