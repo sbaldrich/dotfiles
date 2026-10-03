@@ -55,7 +55,51 @@ func setEnabled(_ id: CGDirectDisplayID, _ enabled: Bool) throws {
     guard done == .success else { throw fail("CGCompleteDisplayConfiguration failed (\(done.rawValue))", code: 1) }
 }
 
-// MARK: - Brightness (DDC/CI)
+// MARK: - Brightness
+
+protocol BrightnessControl {
+    /// Current brightness as a percentage.
+    func brightness() throws -> Int
+    func setBrightness(_ percent: Int) throws
+}
+
+/// DDC for external monitors, DisplayServices for the built-in display.
+func brightnessControl(for display: Display) throws -> BrightnessControl {
+    display.builtin ? try BuiltInBrightness(display) : try DDC(display)
+}
+
+/// The built-in display's brightness, through the private DisplayServices
+/// framework that the brightness keys use.
+struct BuiltInBrightness: BrightnessControl {
+    typealias GetFn = @convention(c) (CGDirectDisplayID, UnsafeMutablePointer<Float>) -> Int32
+    typealias SetFn = @convention(c) (CGDirectDisplayID, Float) -> Int32
+    private let id: CGDirectDisplayID
+    private let get: GetFn
+    private let set: SetFn
+
+    init(_ display: Display) throws {
+        guard let handle = dlopen("/System/Library/PrivateFrameworks/DisplayServices.framework/DisplayServices", RTLD_NOW),
+              let get = dlsym(handle, "DisplayServicesGetBrightness"),
+              let set = dlsym(handle, "DisplayServicesSetBrightness") else {
+            throw fail("the DisplayServices functions are not available on this macOS version")
+        }
+        id = display.id
+        self.get = unsafeBitCast(get, to: GetFn.self)
+        self.set = unsafeBitCast(set, to: SetFn.self)
+    }
+
+    func brightness() throws -> Int {
+        var value: Float = 0
+        guard get(id, &value) == 0 else { throw fail("could not read the built-in display's brightness", code: 1) }
+        return Int((value * 100).rounded())
+    }
+
+    func setBrightness(_ percent: Int) throws {
+        guard set(id, Float(min(max(percent, 0), 100)) / 100) == 0 else {
+            throw fail("could not set the built-in display's brightness", code: 1)
+        }
+    }
+}
 
 // External monitors take brightness over DDC/CI, an I2C channel in the video
 // cable. On Apple Silicon it is reached through private IOKit functions, the
@@ -63,7 +107,7 @@ func setEnabled(_ id: CGDirectDisplayID, _ enabled: Bool) throws {
 typealias AVServiceCreateFn = @convention(c) (CFAllocator?, io_service_t) -> Unmanaged<CFTypeRef>?
 typealias AVServiceI2CFn = @convention(c) (CFTypeRef, UInt32, UInt32, UnsafeMutableRawPointer, UInt32) -> IOReturn
 
-struct DDC {
+struct DDC: BrightnessControl {
     private static let brightnessCode: UInt8 = 0x10  // VCP code for luminance
     private let service: CFTypeRef
     private let readI2C: AVServiceI2CFn
@@ -73,7 +117,6 @@ struct DDC {
     /// DCPAVServiceProxy comes right after the framebuffer of the display it
     /// drives, which carries the monitor's product ID and serial.
     init(_ display: Display) throws {
-        guard !display.builtin else { throw fail("the built-in display has no DDC brightness") }
         guard let handle = dlopen("/System/Library/Frameworks/IOKit.framework/IOKit", RTLD_NOW),
               let create = dlsym(handle, "IOAVServiceCreateWithService"),
               let read = dlsym(handle, "IOAVServiceReadI2C"),
@@ -581,12 +624,12 @@ func brightness(_ selector: String, _ value: String?) throws {
         return number
     }
     let key = resolved.key ?? Selector.defaultKey(for: display)
-    let ddc = try DDC(display)
+    let control = try brightnessControl(for: display)
 
-    var percent = try ddc.brightness()
+    var percent = try control.brightness()
     if let value, let number {
         percent = min(max(value.hasPrefix("+") || value.hasPrefix("-") ? percent + number : number, 0), 100)
-        try ddc.setBrightness(percent)
+        try control.setBrightness(percent)
     }
     remember(display, as: key, in: &store)
     store.targets[key]?.brightness = percent
@@ -618,7 +661,7 @@ let usage = """
            displayctl disconnect <selector> [--force]
            displayctl connect <selector>
            displayctl main <selector>           make it the main display (permanent)
-           displayctl brightness <selector> [N|+N|-N]   read or set brightness in % (DDC)
+           displayctl brightness <selector> [N|+N|-N]   read or set brightness in %
            displayctl alias <name> <selector>   save a display under a friendly name
 
     selector: an alias, a UUID, vendor:model[:serial] (vendor and model in hex,

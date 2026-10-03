@@ -8,16 +8,23 @@
 #
 # The menu bar icon shows one or two screens depending on how many displays are
 # on. The menu has a section per display, whose icon shows whether it is on,
-# with "Connect" or "Disconnect", "Set as Main Display", which moves the menu
-# bar to it (permanently), and a Brightness submenu. The brightness shown is the
-# last one displayctl read or set, so changes made with the monitor's own
-# buttons only show up after the next one.
+# with "Connect" or "Disconnect" and "Set as Main Display", which moves the
+# menu bar to it (permanently). "Brightness…" opens a panel with a slider per
+# display (brightness-panel, built along with displayctl).
 # The items call this script back with the action and the display's selector,
 # so that a failure (e.g. refusing to switch off the last display) shows up as
 # a notification instead of disappearing (they run with terminal=false).
 
 DISPLAYCTL="$HOME/.local/bin/displayctl"
+PANEL="$HOME/.local/bin/brightness-panel"
 SELF="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+
+# The panel stays open while it's used, so start it in the background rather
+# than keep SwiftBar waiting.
+if [[ ${1:-} == panel ]]; then
+    "$PANEL" >/dev/null 2>&1 &
+    exit 0
+fi
 
 if [[ $# -ge 2 ]]; then
     if ! out="$("$DISPLAYCTL" "$@" 2>&1)"; then
@@ -43,28 +50,26 @@ fi
 
 items=()
 on=0
-while IFS=$'\t' read -r _ _ _ _ builtin status _ name brightness _ selector; do
+# displayctl refuses to disconnect the last active display or the built-in one
+# (without --force), so those don't get a Disconnect item.
+active=$(tail -n +2 <<<"$displays" | cut -f6 | grep -c '^active')
+while IFS=$'\t' read -r _ _ _ _ builtin status _ name _ _ selector; do
     action="bash=\"$SELF\" param2=$selector terminal=false refresh=true"
     case $status in
         disabled) items+=("---" "${name//|/-} | sfimage=rectangle.dashed" "Connect | param1=connect $action") ;;
         offline) items+=("---" "${name//|/-} (offline) | sfimage=rectangle.dashed" "Connect | param1=connect $action") ;;
         *)
             on=$((on + 1))
-            items+=("---" "${name//|/-} | sfimage=display" "Disconnect | param1=disconnect $action")
+            items+=("---" "${name//|/-} | sfimage=display")
+            others=$active
+            [[ $status == active* ]] && others=$((active - 1))
+            if [[ $builtin == no ]] && (( others > 0 )); then
+                items+=("Disconnect | param1=disconnect $action")
+            fi
             if [[ $status == *main* ]]; then
                 items+=("Main Display | checked=true")
             elif [[ $status == active ]]; then
                 items+=("Set as Main Display | param1=main $action")
-            fi
-            if [[ $builtin == no && $status == active* ]]; then
-                [[ $brightness == - ]] && label="Brightness" || label="Brightness: $brightness"
-                # SwiftBar disables rows without an action, and a disabled row's
-                # submenu won't open; re-reading the brightness is a harmless one.
-                items+=("$label | sfimage=sun.max param1=brightness $action")
-                for level in 100 90 80 70 60 50 40 30 20 10 0; do
-                    [[ $brightness == "$level%" ]] && checked=true || checked=false
-                    items+=("--$level% | param1=brightness param3=$level $action checked=$checked")
-                done
             fi
             ;;
     esac
@@ -78,4 +83,5 @@ else
 fi
 printf '%s\n' "${items[@]}"
 echo "---"
+[[ -x $PANEL ]] && echo "Brightness… | bash=\"$SELF\" param1=panel terminal=false sfimage=sun.max"
 echo "Show displays | bash=\"$DISPLAYCTL\" param1=list terminal=true sfimage=list.bullet"

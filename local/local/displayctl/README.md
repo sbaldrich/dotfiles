@@ -11,7 +11,7 @@ moves everything to the remaining display (the LG).
 
 ```bash
 make restow PKG=local          # links this folder to ~/local/displayctl and the plugin into ~/local/swiftbar
-~/local/displayctl/build.sh    # compiles to ~/.local/bin/displayctl (re-run after editing the source)
+~/local/displayctl/build.sh    # compiles displayctl and brightness-panel to ~/.local/bin (re-run after editing)
 ```
 
 ## Usage
@@ -23,7 +23,7 @@ displayctl status dell                   # prints connected/disconnected; exit 0
 displayctl disconnect dell               # add --force to allow the built-in display
 displayctl connect dell
 displayctl main lg                       # make it the main display (permanent)
-displayctl brightness dell               # read the brightness from the monitor (DDC)
+displayctl brightness dell               # read the brightness from the monitor
 displayctl brightness dell 70            # set it in %; +10 / -10 adjust it
 displayctl alias <name> <selector>       # save a display under a friendly name
 ```
@@ -57,16 +57,16 @@ Everything is kept in `~/.config/displayctl/targets.json`.
 
 ## SwiftBar
 
-`local/local/swiftbar/displays.5s.sh` runs every 5 seconds. The menu bar
-icon shows two screens when two or more displays are on and one screen when
-only one is, with a red warning if displayctl fails. The menu has a section per
-display, whose icon shows whether it is on, with "Connect" or "Disconnect",
-"Set as Main Display", which moves the menu bar and Dock to it, and a
-Brightness submenu in 10% steps. The brightness shown is the last one displayctl
-read or set, so changes made with the monitor's own buttons show up after the
-next one. Failed actions,
-such as switching off the last display, show a notification. "Show displays"
-opens `displayctl list` in a terminal.
+`local/local/swiftbar/displays.5s.sh` runs every 5 seconds. The menu bar icon
+shows two screens when two or more displays are on and one screen when only one
+is, with a red warning if displayctl fails. The menu has a section per display,
+whose icon shows whether it is on, with "Connect" or "Disconnect" and "Set as
+Main Display", which moves the menu bar and Dock to it. Disconnect is left out
+where displayctl would refuse it: the built-in display and the last active
+display. "Brightness…" opens `brightness-panel`, a small panel with a slider
+per display, just below the mouse pointer; Esc or a click elsewhere closes it.
+Failed actions, such as switching off the last display, show a notification.
+"Show displays" opens `displayctl list` in a terminal.
 
 ## Safety
 
@@ -104,4 +104,6 @@ Brightness uses DDC/CI, the monitor's control channel in the video cable,
 through the private IOKit `IOAVService` functions (as MonitorControl and
 BetterDisplay do). Each display is matched to its channel by product ID and
 serial in the IORegistry. Both monitors here answer DDC, the Dell through the
-KVM too. The built-in display has no DDC.
+KVM too, though a monitor that was just plugged in may need a few seconds. The
+built-in display has no DDC; its brightness goes through the private
+DisplayServices framework, like the brightness keys.
