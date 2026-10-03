@@ -8,3 +8,6 @@ local/.local_aliases.sh
 
 git/.gitconfig
 .claude
+
+# Built binaries (build.sh writes next to the sources)
+local/local/magsafe-led/magsafe-led
