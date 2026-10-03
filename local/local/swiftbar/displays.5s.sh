@@ -10,7 +10,8 @@
 # on. The menu has a section per display, whose icon shows whether it is on,
 # with "Connect" or "Disconnect" and "Set as Main Display", which moves the
 # menu bar to it (permanently). "Brightness…" opens a panel with a slider per
-# display (brightness-panel, built along with displayctl).
+# display (brightness-panel, built along with displayctl); "Full Brightness"
+# sets every display that is on to 100%.
 # The items call this script back with the action and the display's selector,
 # so that a failure (e.g. refusing to switch off the last display) shows up as
 # a notification instead of disappearing (they run with terminal=false).
@@ -26,10 +27,24 @@ if [[ ${1:-} == panel ]]; then
     exit 0
 fi
 
+notify() {
+    local text="${2//\"/\'}"
+    osascript -e "display notification \"$text\" with title \"$1\""
+}
+
+if [[ ${1:-} == full ]]; then
+    failed=""
+    while IFS=$'\t' read -r _ _ _ _ _ status _ name _ _ selector; do
+        [[ $status == active* ]] || continue
+        "$DISPLAYCTL" brightness "$selector" 100 >/dev/null 2>&1 || failed="$failed${failed:+, }$name"
+    done < <("$DISPLAYCTL" list --tsv | tail -n +2)
+    [[ -n $failed ]] && notify "Full brightness failed" "$failed"
+    exit 0
+fi
+
 if [[ $# -ge 2 ]]; then
     if ! out="$("$DISPLAYCTL" "$@" 2>&1)"; then
-        out="${out//\"/\'}"
-        osascript -e "display notification \"$out\" with title \"displayctl $1 failed\""
+        notify "displayctl $1 failed" "$out"
     fi
     exit 0
 fi
@@ -84,4 +99,5 @@ fi
 printf '%s\n' "${items[@]}"
 echo "---"
 [[ -x $PANEL ]] && echo "Brightness… | bash=\"$SELF\" param1=panel terminal=false sfimage=sun.max"
+echo "Full Brightness | bash=\"$SELF\" param1=full terminal=false sfimage=sun.max.fill"
 echo "Show displays | bash=\"$DISPLAYCTL\" param1=list terminal=true sfimage=list.bullet"
