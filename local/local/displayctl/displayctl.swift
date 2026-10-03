@@ -146,8 +146,9 @@ struct DDC: BrightnessControl {
             case "AppleCLCD2", "IOMobileFramebufferShim":
                 guard let attributes = property(entry, "DisplayAttributes") as? [String: Any],
                       let product = attributes["ProductAttributes"] as? [String: Any] else { continue }
-                framebufferMatches = (product["ProductID"] as? Int).map(UInt32.init) == display.model
-                    && (product["SerialNumber"] as? Int).map(UInt32.init) == display.serial
+                // Compared as Int: the built-in panel's ProductID doesn't fit in 32 bits.
+                framebufferMatches = product["ProductID"] as? Int == Int(display.model)
+                    && product["SerialNumber"] as? Int == Int(display.serial)
             case "DCPAVServiceProxy" where framebufferMatches:
                 guard property(entry, "Location") as? String == "External" else { continue }
                 found = unsafeBitCast(create, to: AVServiceCreateFn.self)(kCFAllocatorDefault, entry)?.takeRetainedValue()
