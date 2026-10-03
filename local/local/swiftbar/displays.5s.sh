@@ -8,8 +8,10 @@
 #
 # The menu bar icon shows one or two screens depending on how many displays are
 # on. The menu has a section per display, whose icon shows whether it is on,
-# with "Connect" or "Disconnect", and "Set as Main Display", which moves the
-# menu bar to it (permanently).
+# with "Connect" or "Disconnect", "Set as Main Display", which moves the menu
+# bar to it (permanently), and a Brightness submenu. The brightness shown is the
+# last one displayctl read or set, so changes made with the monitor's own
+# buttons only show up after the next one.
 # The items call this script back with the action and the display's selector,
 # so that a failure (e.g. refusing to switch off the last display) shows up as
 # a notification instead of disappearing (they run with terminal=false).
@@ -17,8 +19,8 @@
 DISPLAYCTL="$HOME/.local/bin/displayctl"
 SELF="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
 
-if [[ $# -eq 2 ]]; then
-    if ! out="$("$DISPLAYCTL" "$1" "$2" 2>&1)"; then
+if [[ $# -ge 2 ]]; then
+    if ! out="$("$DISPLAYCTL" "$@" 2>&1)"; then
         out="${out//\"/\'}"
         osascript -e "display notification \"$out\" with title \"displayctl $1 failed\""
     fi
@@ -41,7 +43,7 @@ fi
 
 items=()
 on=0
-while IFS=$'\t' read -r _ _ _ _ _ status _ name _ selector; do
+while IFS=$'\t' read -r _ _ _ _ builtin status _ name brightness _ selector; do
     action="bash=\"$SELF\" param2=$selector terminal=false refresh=true"
     case $status in
         disabled) items+=("---" "${name//|/-} | sfimage=rectangle.dashed" "Connect | param1=connect $action") ;;
@@ -53,6 +55,16 @@ while IFS=$'\t' read -r _ _ _ _ _ status _ name _ selector; do
                 items+=("Main Display | checked=true")
             elif [[ $status == active ]]; then
                 items+=("Set as Main Display | param1=main $action")
+            fi
+            if [[ $builtin == no && $status == active* ]]; then
+                [[ $brightness == - ]] && label="Brightness" || label="Brightness: $brightness"
+                # SwiftBar disables rows without an action, and a disabled row's
+                # submenu won't open; re-reading the brightness is a harmless one.
+                items+=("$label | sfimage=sun.max param1=brightness $action")
+                for level in 100 90 80 70 60 50 40 30 20 10 0; do
+                    [[ $brightness == "$level%" ]] && checked=true || checked=false
+                    items+=("--$level% | param1=brightness param3=$level $action checked=$checked")
+                done
             fi
             ;;
     esac

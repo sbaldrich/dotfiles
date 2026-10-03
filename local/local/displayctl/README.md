@@ -23,6 +23,8 @@ displayctl status dell                   # prints connected/disconnected; exit 0
 displayctl disconnect dell               # add --force to allow the built-in display
 displayctl connect dell
 displayctl main lg                       # make it the main display (permanent)
+displayctl brightness dell               # read the brightness from the monitor (DDC)
+displayctl brightness dell 70            # set it in %; +10 / -10 adjust it
 displayctl alias <name> <selector>       # save a display under a friendly name
 ```
 
@@ -58,8 +60,11 @@ Everything is kept in `~/.config/displayctl/targets.json`.
 `local/local/swiftbar/displays.5s.sh` runs every 5 seconds. The menu bar
 icon shows two screens when two or more displays are on and one screen when
 only one is, with a red warning if displayctl fails. The menu has a section per
-display, whose icon shows whether it is on, with "Connect" or "Disconnect", and
-"Set as Main Display", which moves the menu bar and Dock to it. Failed actions,
+display, whose icon shows whether it is on, with "Connect" or "Disconnect",
+"Set as Main Display", which moves the menu bar and Dock to it, and a
+Brightness submenu in 10% steps. The brightness shown is the last one displayctl
+read or set, so changes made with the monitor's own buttons show up after the
+next one. Failed actions,
 such as switching off the last display, show a notification. "Show displays"
 opens `displayctl list` in a terminal.
 
@@ -94,3 +99,9 @@ function may change or disappear in a future macOS release.
 
 The main display is the one at (0, 0), so `main` shifts every display by the
 target's offset with the public `CGConfigureDisplayOrigin`.
+
+Brightness uses DDC/CI, the monitor's control channel in the video cable,
+through the private IOKit `IOAVService` functions (as MonitorControl and
+BetterDisplay do). Each display is matched to its channel by product ID and
+serial in the IORegistry. Both monitors here answer DDC, the Dell through the
+KVM too. The built-in display has no DDC.

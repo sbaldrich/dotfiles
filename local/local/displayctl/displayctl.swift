@@ -13,6 +13,7 @@ import AppKit
 import ColorSync
 import CoreGraphics
 import Foundation
+import IOKit
 
 // MARK: - Errors and output
 
@@ -52,6 +53,114 @@ func setEnabled(_ id: CGDirectDisplayID, _ enabled: Bool) throws {
     }
     let done = CGCompleteDisplayConfiguration(config, .forSession)
     guard done == .success else { throw fail("CGCompleteDisplayConfiguration failed (\(done.rawValue))", code: 1) }
+}
+
+// MARK: - Brightness (DDC/CI)
+
+// External monitors take brightness over DDC/CI, an I2C channel in the video
+// cable. On Apple Silicon it is reached through private IOKit functions, the
+// same ones MonitorControl and BetterDisplay use.
+typealias AVServiceCreateFn = @convention(c) (CFAllocator?, io_service_t) -> Unmanaged<CFTypeRef>?
+typealias AVServiceI2CFn = @convention(c) (CFTypeRef, UInt32, UInt32, UnsafeMutableRawPointer, UInt32) -> IOReturn
+
+struct DDC {
+    private static let brightnessCode: UInt8 = 0x10  // VCP code for luminance
+    private let service: CFTypeRef
+    private let readI2C: AVServiceI2CFn
+    private let writeI2C: AVServiceI2CFn
+
+    /// The DDC channel of an online display. In the IORegistry each external
+    /// DCPAVServiceProxy comes right after the framebuffer of the display it
+    /// drives, which carries the monitor's product ID and serial.
+    init(_ display: Display) throws {
+        guard !display.builtin else { throw fail("the built-in display has no DDC brightness") }
+        guard let handle = dlopen("/System/Library/Frameworks/IOKit.framework/IOKit", RTLD_NOW),
+              let create = dlsym(handle, "IOAVServiceCreateWithService"),
+              let read = dlsym(handle, "IOAVServiceReadI2C"),
+              let write = dlsym(handle, "IOAVServiceWriteI2C") else {
+            throw fail("the IOAVService functions are not available on this macOS version")
+        }
+        readI2C = unsafeBitCast(read, to: AVServiceI2CFn.self)
+        writeI2C = unsafeBitCast(write, to: AVServiceI2CFn.self)
+
+        var iterator = io_iterator_t()
+        guard IORegistryCreateIterator(kIOMainPortDefault, kIOServicePlane,
+                                       IOOptionBits(kIORegistryIterateRecursively), &iterator) == KERN_SUCCESS else {
+            throw fail("cannot read the IORegistry")
+        }
+        defer { IOObjectRelease(iterator) }
+
+        func property(_ entry: io_registry_entry_t, _ key: String) -> Any? {
+            IORegistryEntryCreateCFProperty(entry, key as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue()
+        }
+        var framebufferMatches = false
+        var found: CFTypeRef?
+        while found == nil, case let entry = IOIteratorNext(iterator), entry != 0 {
+            defer { IOObjectRelease(entry) }
+            var className = [CChar](repeating: 0, count: 128)
+            IOObjectGetClass(entry, &className)
+            switch String(cString: className) {
+            case "AppleCLCD2", "IOMobileFramebufferShim":
+                guard let attributes = property(entry, "DisplayAttributes") as? [String: Any],
+                      let product = attributes["ProductAttributes"] as? [String: Any] else { continue }
+                framebufferMatches = (product["ProductID"] as? Int).map(UInt32.init) == display.model
+                    && (product["SerialNumber"] as? Int).map(UInt32.init) == display.serial
+            case "DCPAVServiceProxy" where framebufferMatches:
+                guard property(entry, "Location") as? String == "External" else { continue }
+                found = unsafeBitCast(create, to: AVServiceCreateFn.self)(kCFAllocatorDefault, entry)?.takeRetainedValue()
+            default: break
+            }
+        }
+        guard let found else { throw fail("no DDC channel found for display \(display.id)") }
+        service = found
+    }
+
+    /// Sends a DDC/CI message and, if `replyLength` > 0, reads the answer.
+    /// Monitors are slow and occasionally drop messages, hence the retries.
+    private func transfer(_ body: [UInt8], replyLength: Int = 0) -> [UInt8]? {
+        var packet = [0x80 | UInt8(body.count)] + body
+        packet.append(packet.reduce(0x6E ^ 0x51, ^))  // checksum covers both I2C addresses
+        for _ in 0..<4 {
+            var written = true
+            for _ in 0..<2 {
+                usleep(10_000)
+                written = writeI2C(service, 0x37, 0x51, &packet, UInt32(packet.count)) == kIOReturnSuccess
+            }
+            guard replyLength > 0 else { if written { return [] }; continue }
+            usleep(50_000)
+            var reply = [UInt8](repeating: 0, count: replyLength)
+            if written, readI2C(service, 0x37, 0x51, &reply, UInt32(replyLength)) == kIOReturnSuccess,
+               reply.dropLast().reduce(0x50, ^) == reply.last {
+                return reply
+            }
+            usleep(20_000)
+        }
+        return nil
+    }
+
+    /// Current brightness as a percentage of the monitor's maximum.
+    func brightness() throws -> Int {
+        guard let reply = transfer([0x01, DDC.brightnessCode], replyLength: 11),
+              reply[2] == 0x02, reply[3] == 0x00, reply[4] == DDC.brightnessCode else {
+            throw fail("the monitor did not answer the DDC brightness request", code: 1)
+        }
+        let maximum = Int(reply[6]) << 8 | Int(reply[7])
+        let current = Int(reply[8]) << 8 | Int(reply[9])
+        return maximum > 0 ? (current * 100 + maximum / 2) / maximum : current
+    }
+
+    func setBrightness(_ percent: Int) throws {
+        // Brightness is set in the monitor's own units, which are 0-100 on most
+        // monitors; read the real maximum to be sure.
+        guard let reply = transfer([0x01, DDC.brightnessCode], replyLength: 11), reply[4] == DDC.brightnessCode else {
+            throw fail("the monitor did not answer the DDC brightness request", code: 1)
+        }
+        let maximum = max(Int(reply[6]) << 8 | Int(reply[7]), 1)
+        let value = (min(max(percent, 0), 100) * maximum + 50) / 100
+        guard transfer([0x03, DDC.brightnessCode, UInt8(value >> 8), UInt8(value & 0xFF)]) != nil else {
+            throw fail("could not send the brightness to the monitor", code: 1)
+        }
+    }
 }
 
 // MARK: - Displays
@@ -134,6 +243,8 @@ struct Target: Codable {
     var lastDisplayID: CGDirectDisplayID
     var name: String?
     var disabledDuringBoot: Int?
+    /// Last brightness read or set, so listing doesn't talk DDC every few seconds.
+    var brightness: Int?
 
     init(_ display: Display) {
         vendor = display.vendor
@@ -283,11 +394,13 @@ func resolve(_ text: String, in store: Store) throws -> Resolved {
 }
 
 /// Remember an online display's current identifiers under its key. Its name
-/// is kept, because asleep or mirrored displays have no NSScreen to ask.
+/// is kept, because asleep or mirrored displays have no NSScreen to ask, and so
+/// is the last known brightness.
 @MainActor
 func remember(_ display: Display, as key: String, in store: inout Store) {
     var target = Target(display)
     target.name = store.targets[key]?.name ?? screenNames()[display.id]
+    target.brightness = store.targets[key]?.brightness
     store.targets[key] = target
 }
 
@@ -300,7 +413,7 @@ func list(tsv: Bool) throws {
     var store = try Store()
     let online = onlineDisplays()
     let names = screenNames()
-    var rows: [[String]] = [["ID", "VENDOR", "MODEL", "SERIAL", "BUILTIN", "STATE", "ALIAS", "NAME", "UUID", "SELECTOR"]]
+    var rows: [[String]] = [["ID", "VENDOR", "MODEL", "SERIAL", "BUILTIN", "STATE", "ALIAS", "NAME", "BRIGHTNESS", "UUID", "SELECTOR"]]
 
     for display in online {
         let alias = store.alias(for: display)
@@ -308,8 +421,9 @@ func list(tsv: Bool) throws {
         let state = display.active ? (display.main ? "active,main" : "active")
             : display.asleep ? "asleep" : "mirrored"
         let name = names[display.id] ?? alias.flatMap { store.targets[$0]?.name } ?? "-"
+        let brightness = alias.flatMap { store.targets[$0]?.brightness }.map { "\($0)%" } ?? "-"
         rows.append([String(display.id), hex(display.vendor), hex(display.model), String(display.serial),
-                     display.builtin ? "yes" : "no", state, alias ?? "-", name, display.uuid,
+                     display.builtin ? "yes" : "no", state, alias ?? "-", name, brightness, display.uuid,
                      alias ?? Selector.defaultKey(for: display)])
     }
     // Saved targets that are not online are either disabled by displayctl or
@@ -317,12 +431,12 @@ func list(tsv: Bool) throws {
     for (key, target) in store.targets.sorted(by: { $0.key < $1.key }) where !online.contains(where: target.matches) {
         let state = target.disabledByUs ? "disabled" : "offline"
         rows.append([String(target.lastDisplayID), hex(target.vendor), hex(target.model), String(target.serial),
-                     "-", state, key, target.name ?? "-", target.uuid, key])
+                     "-", state, key, target.name ?? "-", "-", target.uuid, key])
     }
     try store.save()
     // macOS lists the main display first and disabled ones are appended, so sort
     // by name (then selector) to keep the order steady whatever gets clicked.
-    rows = [rows[0]] + rows.dropFirst().sorted { ($0[7], $0[9]) < ($1[7], $1[9]) }
+    rows = [rows[0]] + rows.dropFirst().sorted { ($0[7], $0[10]) < ($1[7], $1[10]) }
 
     if tsv {
         rows.forEach { print($0.joined(separator: "\t")) }
@@ -451,6 +565,35 @@ func main(_ selector: String) throws {
     print("display \(display.id) is now the main display")
 }
 
+/// Without a value, reads the brightness from the monitor. With one, sets it:
+/// a percentage, or +N / -N relative to the current level.
+@MainActor
+func brightness(_ selector: String, _ value: String?) throws {
+    var store = try Store()
+    let resolved = try resolve(selector, in: store)
+    guard let display = resolved.display, display.active else {
+        throw fail("'\(selector)' is not an active display")
+    }
+    let number = try value.map { value in
+        guard let number = Int(value), (0...100).contains(abs(number)) else {
+            throw fail("bad brightness '\(value)' (expected 0-100, +N or -N)")
+        }
+        return number
+    }
+    let key = resolved.key ?? Selector.defaultKey(for: display)
+    let ddc = try DDC(display)
+
+    var percent = try ddc.brightness()
+    if let value, let number {
+        percent = min(max(value.hasPrefix("+") || value.hasPrefix("-") ? percent + number : number, 0), 100)
+        try ddc.setBrightness(percent)
+    }
+    remember(display, as: key, in: &store)
+    store.targets[key]?.brightness = percent
+    try store.save()
+    print("\(percent)%")
+}
+
 @MainActor
 func alias(_ name: String, _ selector: String) throws {
     guard name.first?.isLetter == true, !name.contains(":") else {
@@ -475,6 +618,7 @@ let usage = """
            displayctl disconnect <selector> [--force]
            displayctl connect <selector>
            displayctl main <selector>           make it the main display (permanent)
+           displayctl brightness <selector> [N|+N|-N]   read or set brightness in % (DDC)
            displayctl alias <name> <selector>   save a display under a friendly name
 
     selector: an alias, a UUID, vendor:model[:serial] (vendor and model in hex,
@@ -498,6 +642,8 @@ func run(_ arguments: [String]) -> Int32 {
         case ("disconnect", 2): try disconnect(args[1], force: force)
         case ("connect", 2): try connect(args[1])
         case ("main", 2): try main(args[1])
+        case ("brightness", 2): try brightness(args[1], nil)
+        case ("brightness", 3): try brightness(args[1], args[2])
         case ("alias", 3): try alias(args[1], args[2])
         case ("help", _), ("-h", _), ("--help", _): print(usage)
         default:
