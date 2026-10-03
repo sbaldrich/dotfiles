@@ -286,6 +286,8 @@ struct Target: Codable {
     var uuid: String
     var lastDisplayID: CGDirectDisplayID
     var name: String?
+    /// Optional because older saved targets don't have it.
+    var builtin: Bool?
     var disabledDuringBoot: Int?
     /// Last brightness read or set, so listing doesn't talk DDC every few seconds.
     var brightness: Int?
@@ -296,6 +298,7 @@ struct Target: Codable {
         serial = display.serial
         uuid = display.uuid
         lastDisplayID = display.id
+        builtin = display.builtin
     }
 
     // Vendor, model and serial come from the monitor itself; the UUID can change
@@ -475,7 +478,7 @@ func list(tsv: Bool) throws {
     for (key, target) in store.targets.sorted(by: { $0.key < $1.key }) where !online.contains(where: target.matches) {
         let state = target.disabledByUs ? "disabled" : "offline"
         rows.append([String(target.lastDisplayID), hex(target.vendor), hex(target.model), String(target.serial),
-                     "-", state, key, target.name ?? "-", "-", target.uuid, key])
+                     target.builtin.map { $0 ? "yes" : "no" } ?? "-", state, key, target.name ?? "-", "-", target.uuid, key])
     }
     try store.save()
     // macOS lists the main display first and disabled ones are appended, so sort

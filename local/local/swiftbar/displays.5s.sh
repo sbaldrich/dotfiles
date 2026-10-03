@@ -69,9 +69,15 @@ on=0
 # (without --force), so those don't get a Disconnect item.
 active=$(tail -n +2 <<<"$displays" | cut -f6 | grep -c '^active')
 while IFS=$'\t' read -r _ _ _ _ builtin status _ name _ _ selector; do
+    # The built-in display comes and goes with the lid; connecting it with the lid
+    # closed lights it behind the lid and moves the menu bar there. So it is left
+    # alone and only listed while on.
+    [[ $builtin == yes && ( $status == disabled || $status == offline ) ]] && continue
     action="bash=\"$SELF\" param2=$selector terminal=false refresh=true"
     case $status in
         disabled) items+=("---" "${name//|/-} | sfimage=rectangle.dashed" "Connect | param1=connect $action") ;;
+        # Probably unplugged or powered off, but it may also have been switched off
+        # by another tool or before a reboot, so still offer to reconnect it.
         offline) items+=("---" "${name//|/-} (offline) | sfimage=rectangle.dashed" "Connect | param1=connect $action") ;;
         *)
             on=$((on + 1))
