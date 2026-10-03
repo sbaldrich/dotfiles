@@ -22,6 +22,7 @@ displayctl list --tsv                    # the same for scripts, with a SELECTOR
 displayctl status dell                   # prints connected/disconnected; exit 0 / 1, 2 on error
 displayctl disconnect dell               # add --force to allow the built-in display
 displayctl connect dell
+displayctl main lg                       # make it the main display (permanent)
 displayctl alias <name> <selector>       # save a display under a friendly name
 ```
 
@@ -56,8 +57,9 @@ Everything is kept in `~/.config/displayctl/targets.json`.
 
 `local/local/swiftbar/displays.5s.sh` runs every 5 seconds. The menu bar
 icon shows two screens when two or more displays are on and one screen when
-only one is, with a red warning if displayctl fails. The menu lists every
-display, checked when on; click one to switch it off or on. Failed actions,
+only one is, with a red warning if displayctl fails. The menu has a section per
+display, whose icon shows whether it is on, with "Connect" or "Disconnect", and
+"Set as Main Display", which moves the menu bar and Dock to it. Failed actions,
 such as switching off the last display, show a notification. "Show displays"
 opens `displayctl list` in a terminal.
 
@@ -65,7 +67,10 @@ opens `displayctl list` in a terminal.
 
 - It refuses to disconnect the last active display, even with `--force`.
 - It refuses to disconnect the built-in display unless `--force` is given.
-- Changes are made for the login session only.
+- Disconnecting lasts for the login session only.
+- Setting the main display is permanent, like dragging the menu bar in System
+  Settings > Displays > Arrange. It only moves where (0, 0) is, so the
+  arrangement stays as it was.
 
 ## Recovering
 
@@ -86,3 +91,6 @@ Verified on macOS 26.6.2 (M3 Pro): disabled displays stay disabled after
 displayctl exits, are re-enabled by their saved ID, and macOS restores the
 previous arrangement and main display when they come back. Being private, the
 function may change or disappear in a future macOS release.
+
+The main display is the one at (0, 0), so `main` shifts every display by the
+target's offset with the public `CGConfigureDisplayOrigin`.

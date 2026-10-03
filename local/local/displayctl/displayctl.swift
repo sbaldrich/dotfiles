@@ -320,6 +320,9 @@ func list(tsv: Bool) throws {
                      "-", state, key, target.name ?? "-", target.uuid, key])
     }
     try store.save()
+    // macOS lists the main display first and disabled ones are appended, so sort
+    // by name (then selector) to keep the order steady whatever gets clicked.
+    rows = [rows[0]] + rows.dropFirst().sorted { ($0[7], $0[9]) < ($1[7], $1[9]) }
 
     if tsv {
         rows.forEach { print($0.joined(separator: "\t")) }
@@ -411,6 +414,43 @@ func connect(_ selector: String) throws {
     print("connected display \(id) (\(key))")
 }
 
+/// The main display is whichever one sits at (0, 0), so shift every display by
+/// the target's offset: the arrangement stays, only the origin moves. Unlike
+/// disconnecting this can't leave the Mac without a screen, so it is permanent.
+@MainActor
+func main(_ selector: String) throws {
+    var store = try Store()
+    let resolved = try resolve(selector, in: store)
+    guard let display = resolved.display, display.active else {
+        throw fail("'\(selector)' is not an active display")
+    }
+    if let key = resolved.key, resolved.target != nil { remember(display, as: key, in: &store) }
+    try store.save()
+    guard !display.main else {
+        print("already main")
+        return
+    }
+
+    let offset = CGDisplayBounds(display.id).origin
+    var config: CGDisplayConfigRef?
+    let begun = CGBeginDisplayConfiguration(&config)
+    guard begun == .success else { throw fail("CGBeginDisplayConfiguration failed (\(begun.rawValue))") }
+    for id in activeIDs() {
+        let origin = CGDisplayBounds(id).origin
+        let err = CGConfigureDisplayOrigin(config, id, Int32(origin.x - offset.x), Int32(origin.y - offset.y))
+        guard err == .success else {
+            CGCancelDisplayConfiguration(config)
+            throw fail("CGConfigureDisplayOrigin(\(id)) failed (\(err.rawValue))", code: 1)
+        }
+    }
+    let done = CGCompleteDisplayConfiguration(config, .permanently)
+    guard done == .success else { throw fail("CGCompleteDisplayConfiguration failed (\(done.rawValue))", code: 1) }
+    guard waitUntil({ CGMainDisplayID() == display.id }) else {
+        throw fail("display \(display.id) did not become the main display", code: 1)
+    }
+    print("display \(display.id) is now the main display")
+}
+
 @MainActor
 func alias(_ name: String, _ selector: String) throws {
     guard name.first?.isLetter == true, !name.contains(":") else {
@@ -434,6 +474,7 @@ let usage = """
            displayctl status <selector>         prints connected/disconnected; exit 0/1, 2 on error
            displayctl disconnect <selector> [--force]
            displayctl connect <selector>
+           displayctl main <selector>           make it the main display (permanent)
            displayctl alias <name> <selector>   save a display under a friendly name
 
     selector: an alias, a UUID, vendor:model[:serial] (vendor and model in hex,
@@ -456,6 +497,7 @@ func run(_ arguments: [String]) -> Int32 {
         case ("status", 2): return try status(args[1])
         case ("disconnect", 2): try disconnect(args[1], force: force)
         case ("connect", 2): try connect(args[1])
+        case ("main", 2): try main(args[1])
         case ("alias", 3): try alias(args[1], args[2])
         case ("help", _), ("-h", _), ("--help", _): print(usage)
         default:
