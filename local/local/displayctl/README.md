@@ -50,7 +50,9 @@ displayctl alias dell 10ac:a241
 ```
 
 The alias matches on vendor, model and serial, which come from the monitor
-itself, with the UUID as a fallback. The display ID is saved too, and updated
+itself, with the UUID as a fallback. A monitor with a serial is matched on
+vendor and serial alone, because the model can change with the input (the Dell
+is `10ac:a241` on DisplayPort and `10ac:a243` over Thunderbolt). The display ID is saved too, and updated
 whenever the Dell is seen, because a disabled display disappears from every
 public display list and its last ID is the only way to turn it back on.
 Everything is kept in `~/.config/displayctl/targets.json`.

@@ -302,8 +302,11 @@ struct Target: Codable {
     }
 
     // Vendor, model and serial come from the monitor itself; the UUID can change
-    // with the port it is plugged into, so it is only the fallback.
+    // with the port it is plugged into, so it is only the fallback. The model
+    // can change with the input too (the Dell U3425WE is 0xa241 on DisplayPort
+    // and 0xa243 over Thunderbolt), so a serial is enough on its own.
     func matches(_ display: Display) -> Bool {
+        if vendor == display.vendor && serial != 0 && serial == display.serial { return true }
         if vendor == display.vendor && model == display.model { return serial == 0 || serial == display.serial }
         return !uuid.isEmpty && uuid == display.uuid
     }
