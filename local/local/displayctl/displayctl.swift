@@ -516,17 +516,19 @@ func status(_ selector: String) throws -> Int32 {
 }
 
 @MainActor
-func disconnect(_ selector: String, force: Bool) throws {
+func disconnect(_ selector: String) throws {
     var store = try Store()
     let resolved = try resolve(selector, in: store)
     guard let display = resolved.display, let key = resolved.key else {
         print("already disconnected")
         return
     }
-    if display.builtin && !force {
-        throw fail("refusing to disconnect the built-in display \(display.id) without --force")
+    // Opening the lid doesn't bring a disabled built-in display back, so once the
+    // external displays are unplugged the Mac would be left without a screen.
+    if display.builtin {
+        throw fail("refusing to disconnect the built-in display \(display.id); close the lid instead")
     }
-    // Never leave the Mac without a screen, --force or not.
+    // Never leave the Mac without a screen.
     guard activeIDs().contains(where: { $0 != display.id }) else {
         throw fail("refusing to disconnect display \(display.id): it is the only active display")
     }
@@ -665,7 +667,7 @@ func alias(_ name: String, _ selector: String) throws {
 let usage = """
     usage: displayctl list [--tsv]
            displayctl status <selector>         prints connected/disconnected; exit 0/1, 2 on error
-           displayctl disconnect <selector> [--force]
+           displayctl disconnect <selector>     not the built-in display
            displayctl connect <selector>
            displayctl main <selector>           make it the main display (permanent)
            displayctl brightness <selector> [N|+N|-N]   read or set brightness in %
@@ -681,15 +683,14 @@ let usage = """
 @MainActor
 func run(_ arguments: [String]) -> Int32 {
     var args = arguments
-    let force = args.contains("--force")
     let tsv = args.contains("--tsv")
-    args.removeAll { $0 == "--force" || $0 == "--tsv" }
+    args.removeAll { $0 == "--tsv" }
 
     do {
         switch (args.first, args.count) {
         case ("list", 1): try list(tsv: tsv)
         case ("status", 2): return try status(args[1])
-        case ("disconnect", 2): try disconnect(args[1], force: force)
+        case ("disconnect", 2): try disconnect(args[1])
         case ("connect", 2): try connect(args[1])
         case ("main", 2): try main(args[1])
         case ("brightness", 2): try brightness(args[1], nil)

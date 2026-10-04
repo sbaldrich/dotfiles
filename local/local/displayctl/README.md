@@ -20,7 +20,7 @@ make restow PKG=local          # links this folder to ~/local/displayctl and the
 displayctl list                          # all displays, plus saved ones that are disabled or offline
 displayctl list --tsv                    # the same for scripts, with a SELECTOR column per display
 displayctl status dell                   # prints connected/disconnected; exit 0 / 1, 2 on error
-displayctl disconnect dell               # add --force to allow the built-in display
+displayctl disconnect dell               # not the built-in display
 displayctl connect dell
 displayctl main lg                       # make it the main display (permanent)
 displayctl brightness dell               # read the brightness from the monitor
@@ -72,8 +72,10 @@ Failed actions, such as switching off the last display, show a notification.
 
 ## Safety
 
-- It refuses to disconnect the last active display, even with `--force`.
-- It refuses to disconnect the built-in display unless `--force` is given.
+- It refuses to disconnect the last active display.
+- It refuses to disconnect the built-in display: opening the lid doesn't turn a
+  disabled built-in display back on, so unplugging the monitors afterwards
+  would leave the Mac without a screen. Closing the lid turns it off anyway.
 - Disconnecting lasts for the login session only.
 - Setting the main display is permanent, like dragging the menu bar in System
   Settings > Displays > Arrange. It only moves where (0, 0) is, so the

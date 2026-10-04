@@ -65,8 +65,8 @@ fi
 
 items=()
 on=0
-# displayctl refuses to disconnect the last active display or the built-in one
-# (without --force), so those don't get a Disconnect item.
+# displayctl refuses to disconnect the last active display or the built-in one,
+# so those don't get a Disconnect item.
 active=$(tail -n +2 <<<"$displays" | cut -f6 | grep -c '^active')
 while IFS=$'\t' read -r _ _ _ _ builtin status _ name _ _ selector; do
     # The built-in display comes and goes with the lid; connecting it with the lid
