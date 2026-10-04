@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>dev.sbaldrich.magsafe-led.off</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/magsafe-led</string>
+        <string>off</string>
+    </array>
+    <!-- At 19:00, and again at 20:00 in case macOS turned it back on. -->
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict>
+            <key>Hour</key>
+            <integer>19</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Hour</key>
+            <integer>20</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+    </array>
+    <key>StandardOutPath</key>
+    <string>/var/log/magsafe-led.log</string>
+    <key>StandardErrorPath</key>
+    <string>/var/log/magsafe-led.log</string>
+</dict>
+</plist>

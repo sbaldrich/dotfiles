@@ -27,7 +27,31 @@ sudo install -m 755 -o root -g wheel ~/local/magsafe-led/magsafe-led /usr/local/
 `shasum -a 256 -c SHA256SUMS` checks the sources and the binary; the binary line matches the build
 from Xcode's toolchain as of 2026-10-03 and may differ with another Swift version.
 
-Install it root-owned: running `sudo` on a binary your own user can overwrite defeats the point.
+## Schedule (optional)
+
+Two launchd jobs: one turns the LED off at 19:00 and again at 20:00 (in case macOS turned it back on),
+the other hands it back to macOS at 07:30. Each runs `magsafe-led` once and exits. A job missed while
+the Mac was asleep runs on wake; one missed while it was shut down is skipped. A one-shot `off` may be
+undone by power events during the night (see above). Output goes to `/var/log/magsafe-led.log`.
+
+```sh
+for job in off on; do
+  sudo install -m 644 -o root -g wheel ~/local/magsafe-led/dev.sbaldrich.magsafe-led.$job.plist /Library/LaunchDaemons/
+  sudo launchctl bootstrap system /Library/LaunchDaemons/dev.sbaldrich.magsafe-led.$job.plist
+done
+```
+
+To change the times, edit the plists and reinstall them (bootout, install, bootstrap). To remove them:
+
+```sh
+for job in off on; do
+  sudo launchctl bootout system/dev.sbaldrich.magsafe-led.$job
+  sudo rm /Library/LaunchDaemons/dev.sbaldrich.magsafe-led.$job.plist
+done
+```
+
+Install everything root-owned: running `sudo` on a binary your own user can overwrite defeats the point.
 ABI layout check (no hardware): `xcrun swiftc SMC.swift offline-checks.swift -o /tmp/chk -framework IOKit && /tmp/chk`
 
-A review of upstream MagSleep, which motivated this extraction, is in `UPSTREAM-AUDIT.md`. Physical off/on, sleep/wake, charger reconnect and signal restoration have not been tested on hardware.
+A review of upstream MagSleep, which motivated this extraction, is in `UPSTREAM-AUDIT.md`. Tested on
+hardware (MacBook Pro M3 Pro, macOS 26). The schedule has not been run under launchd yet.
