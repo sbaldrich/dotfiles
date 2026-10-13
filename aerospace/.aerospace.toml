@@ -199,6 +199,11 @@ on-mode-changed = []
     # See: https://nikitabobko.github.io/AeroSpace/commands#move-workspace-to-monitor
     alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
 
+    # See: https://nikitabobko.github.io/AeroSpace/commands#move-node-to-monitor
+    # Send the focused window to the next/previous monitor (lands on that monitor's visible workspace)
+    alt-shift-period = 'move-node-to-monitor --wrap-around next'
+    alt-shift-comma = 'move-node-to-monitor --wrap-around prev'
+
     # See: https://nikitabobko.github.io/AeroSpace/commands#mode
     alt-shift-semicolon = 'mode service'
 
