@@ -149,6 +149,9 @@ Plug 'ayu-theme/ayu-vim' " or other package manager
 "Plug 'stevearc/oil.nvim'                  " file explorer: edit directories as buffers
 "Plug 'nvim-lualine/lualine.nvim'          " statusline + buffer tabline
 "Plug 'stevearc/conform.nvim'              " formatting via external formatters
+if filereadable(expand('~/.config/nvim/local.plugins.vim'))
+  source ~/.config/nvim/local.plugins.vim
+endif
 
 call plug#end()
 
@@ -221,3 +224,23 @@ nnoremap <leader>fr :Telescope oldfiles<CR>
 "EOF
 "nnoremap <silent> <leader>cf :lua require('conform').format({ lsp_format = 'fallback' })<CR>
 "vnoremap <silent> <leader>cf :lua require('conform').format({ lsp_format = 'fallback' })<CR>
+
+" --- LSP keymaps ---------------------------------------------------------------
+lua << EOF
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(ev)
+    local opts = { buffer = ev.buf }
+    vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
+    vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
+    vim.keymap.set("n", "grr", vim.lsp.buf.references, opts)
+    vim.keymap.set("n", "gri", vim.lsp.buf.implementation, opts)
+    vim.keymap.set("n", "grn", vim.lsp.buf.rename, opts)
+    vim.keymap.set("n", "gra", vim.lsp.buf.code_action, opts)
+    vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
+  end,
+})
+EOF
+
+if filereadable(expand('~/.config/nvim/local.vim'))
+  source ~/.config/nvim/local.vim
+endif
