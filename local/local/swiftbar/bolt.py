@@ -43,6 +43,9 @@ UNKNOWN_KIND = ("dot.radiowaves.left.and.right", "Device")
 
 KEYBOARD = 0x01
 OVERLAY = Path.home() / ".local/bin/boltframe"  # see local/boltframe; skipped if not built
+# Exists while the overlay is turned off. The menu items create and delete it,
+# since they run as separate commands, and the running plugin checks it every second.
+OVERLAY_OFF = Path.home() / ".config/bolt/overlay-off"
 
 RED, ORANGE, GREEN, GREY = "#FF3B30", "#FF9500", "#34C759", "#8E8E93"
 # Away from the desk there's no receiver, which is normal, so it isn't red.
@@ -50,14 +53,15 @@ NO_RECEIVER = ("keyboard.badge.ellipsis", GREY, "No Bolt receiver found")
 RECEIVER_BUSY = ("exclamationmark.triangle.fill", RED, "Bolt receiver found, but another app holds it exclusively")
 
 
-def emit(online, elsewhere=False):
+def emit(online, elsewhere=False, overlay_pid=None):
     """Push one menu bar update to SwiftBar. online: {slot: kind} of devices linked
-    to this Mac; elsewhere: the keyboard is paired here but linked to another computer."""
+    to this Mac; elsewhere: the keyboard is paired here but linked to another computer;
+    overlay_pid: the overlay's process while it's up."""
     devices = sorted(online.items(), key=lambda s: (s[1], s[0]))  # keyboard before mouse
     icons = [KINDS.get(kind, UNKNOWN_KIND)[0] for _, kind in devices]
     tips = [f"{KINDS.get(kind, UNKNOWN_KIND)[1]} connected (slot {slot})" for slot, kind in devices]
     if elsewhere:
-        show(["keyboard", *icons], RED, ["Keyboard isn't connected to this Mac", *tips])
+        show(["keyboard", *icons], RED, ["Keyboard isn't connected to this Mac", *tips], overlay_pid)
     elif devices:
         show(icons, GREEN, tips)
     else:
@@ -69,7 +73,7 @@ def emit_problem(problem):
     show([icon], color, [tip])
 
 
-def show(icons, color, tips):
+def show(icons, color, tips, overlay_pid=None):
     print("~~~")
     # sfimage= is always rendered as a template (monochrome) image, so sfcolor is
     # ignored there; an inline :symbol: in the title is what sfcolor tints.
@@ -77,7 +81,19 @@ def show(icons, color, tips):
     print(f"{title} | sfcolor={color} sfsize=16")
     print("---")
     print("\n".join(tips))
+    print("---")
+    if overlay_pid is not None:
+        print(f"Hide Overlay | bash=/bin/kill param1={overlay_pid} terminal=false")
+    if overlay_enabled():
+        toggle = f'bash=/usr/bin/touch param1="{OVERLAY_OFF}" checked=true'
+    else:
+        toggle = f'bash=/bin/rm param1=-f param2="{OVERLAY_OFF}"'
+    print(f"Show Overlay When Keyboard Leaves | {toggle} terminal=false")
     sys.stdout.flush()
+
+
+def overlay_enabled():
+    return not OVERLAY_OFF.exists()
 
 
 def share_receiver():
@@ -125,36 +141,40 @@ def listen(dev):
     flags[1] |= 0x01  # 0x000100 = wireless notifications
     register(dev, SET_REG, REG_NOTIFY_FLAGS, flags)
 
-    online = {}
-    emit(online)
-
     # Ask the receiver to announce the current state of every paired device.
     dev.write([0x10, RECEIVER, SET_REG, REG_CONNECTION, 0x02, 0x00, 0x00])
 
+    online = {}
     keyboards = set()  # slots of paired keyboards, linked here or not
-    elsewhere = False
+    elsewhere = enabled = False
     overlay = None     # boltframe process, started when the keyboard leaves
+    shown = None       # what the menu last showed, to update it only on a change
     try:
         while True:
             r = dev.read(20, 1000)
-            if not (r and len(r) >= 5 and r[2] == DEVICE_CONNECTION):
-                continue
-            slot, kind = r[1], r[4] & KIND_MASK
-            if kind == KEYBOARD:
-                keyboards.add(slot)
-            if r[4] & LINK_DOWN:
-                online.pop(slot, None)
-            else:
-                online[slot] = kind
-            was_elsewhere = elsewhere
-            elsewhere = bool(keyboards) and not keyboards & online.keys()
-            # Only on the change: a key pressed on this Mac closes the overlay,
-            # and it stays closed until the keyboard comes back and leaves again.
-            if elsewhere and not was_elsewhere:
+            was_elsewhere, was_enabled = elsewhere, enabled
+            if r and len(r) >= 5 and r[2] == DEVICE_CONNECTION:
+                slot, kind = r[1], r[4] & KIND_MASK
+                if kind == KEYBOARD:
+                    keyboards.add(slot)
+                if r[4] & LINK_DOWN:
+                    online.pop(slot, None)
+                else:
+                    online[slot] = kind
+                elsewhere = bool(keyboards) and not keyboards & online.keys()
+            enabled = overlay_enabled()
+            # Only when the keyboard leaves or the overlay is turned back on: a
+            # key pressed on this Mac or "Hide Overlay" closes it, and it stays
+            # closed until the keyboard comes back and leaves again.
+            if elsewhere and enabled and not (was_elsewhere and was_enabled):
                 overlay = start_overlay()
-            elif was_elsewhere and not elsewhere:
+            elif not (elsewhere and enabled):
                 overlay = stop_overlay(overlay)
-            emit(online, elsewhere)
+            overlay_pid = overlay.pid if overlay is not None and overlay.poll() is None else None
+            state = (sorted(online.items()), elsewhere, enabled, overlay_pid)
+            if state != shown:
+                emit(online, elsewhere, overlay_pid)
+                shown = state
     finally:
         stop_overlay(overlay)
 
@@ -176,6 +196,7 @@ def stop_overlay(overlay):
 
 
 def main():
+    OVERLAY_OFF.parent.mkdir(parents=True, exist_ok=True)  # so the menu's touch works
     share_receiver()
     while True:
         try:
