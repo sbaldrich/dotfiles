@@ -27,6 +27,8 @@ nnoremap <leader>w :w<CR>
 nnoremap <C-n> :bnext<CR>
 nnoremap <C-p> :bprevious<CR>
 
+vnoremap J :m '>+1<CR>gv=gv
+vnoremap K :m '<-2<CR>gv=gv
 " ============================================================================
 " UI
 " ============================================================================
@@ -147,7 +149,8 @@ Plug 'ayu-theme/ayu-vim' " or other package manager
 " Disabled for now. Uncomment the Plug line AND its config block below.
 "Plug 'sirver/ultisnips'                   " snippets; needs: pip install pynvim
 "Plug 'stevearc/oil.nvim'                  " file explorer: edit directories as buffers
-"Plug 'nvim-lualine/lualine.nvim'          " statusline + buffer tabline
+Plug 'nvim-lualine/lualine.nvim'          " statusline + buffer tabline
+Plug 'nvim-tree/nvim-web-devicons'
 "Plug 'stevearc/conform.nvim'              " formatting via external formatters
 if filereadable(expand('~/.config/nvim/local.plugins.vim'))
   source ~/.config/nvim/local.plugins.vim
@@ -199,16 +202,16 @@ nnoremap <leader>fr :Telescope oldfiles<CR>
 " --- Lualine ---------------------------------------------------------------
 " Icons and powerline separators are off so it works without a Nerd Font.
 " The tabline lists open buffers (pairs with <C-n>/<C-p>).
-"lua << EOF
-"require('lualine').setup({
-"  options = {
-"    icons_enabled = false,
-"    section_separators = '',
-"    component_separators = '|',
-"  },
-"  tabline = { lualine_a = { 'buffers' } },
-"})
-"EOF
+lua << EOF
+require('lualine').setup({
+  options = {
+    icons_enabled = true,
+    section_separators = '',
+    component_separators = '|',
+  },
+  tabline = { lualine_a = { 'buffers' } },
+})
+EOF
 
 " --- Conform ---------------------------------------------------------------
 " Formatters listed here must be installed separately (black, stylua, ...).
